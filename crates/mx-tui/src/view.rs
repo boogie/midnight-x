@@ -8,7 +8,7 @@ use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
 use ratatui::Frame;
 
 use crate::layout::FrameLayout;
-use crate::theme_styles::{frame_style, modal_style, panel_title_style, status_style};
+use crate::theme_styles::{frame_style, panel_title_style, status_style};
 
 pub fn view(state: &State, layout: &FrameLayout, frame: &mut Frame<'_>) {
     let theme = &state.config.theme;
@@ -405,51 +405,88 @@ fn render_hint(frame: &mut Frame<'_>, area: Rect, state: &State) {
     let _ = state; // reserved for context-sensitive hints in Phase 2
 }
 
-fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
+fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
     use ratatui::style::Modifier;
     use ratatui::widgets::Padding;
 
-    let theme = &state.config.theme;
     let modal = state
         .modal
         .as_ref()
         .expect("render_modal called without a modal");
-    frame.render_widget(Clear, area);
 
+    let chrome = modal_chrome(modal);
+    let buttons = modal_buttons(modal);
     let title = modal_title(modal);
-    let mstyle = modal_style(theme);
 
-    // Outer block: rounded single-line border, internal 2-col + 1-row
-    // padding, centred bold title on the top border.
+    // Compute body once with a generous virtual width to learn its size.
+    // We re-render at the real width below.
+    let screen = frame.area();
+    let probe_area = Rect {
+        x: 0,
+        y: 0,
+        width: screen.width.saturating_sub(8),
+        height: screen.height.saturating_sub(8),
+    };
+    let body = body_text(modal, probe_area, &state.config.keymap);
+
+    // Geometry: shrink-fit to content. Outer = body + buttons (no gap)
+    // + 2 rows internal padding (1 top, 1 bottom) + 2 rows border.
+    // Width    = max(body_line, button_strip, title) + 4 cols padding + 2 border.
+    let body_lines: Vec<&str> = body.lines().collect();
+    let body_h: u16 = u16::try_from(body_lines.len()).unwrap_or(u16::MAX);
+    let buttons_h: u16 = u16::from(!buttons.is_empty());
+    let body_w = body_lines
+        .iter()
+        .map(|l| l.chars().count())
+        .max()
+        .unwrap_or(0);
+    let buttons_w = buttons_strip_width(&buttons);
+    let title_w = title.chars().count();
+    let inner_w = body_w.max(buttons_w).max(title_w);
+
+    // Outer modal size, capped at "screen minus 4 cells" so there's at least
+    // 2 cells of clear space around the frame on every side.
+    let max_w = screen.width.saturating_sub(4);
+    let max_h = screen.height.saturating_sub(4);
+    let modal_w = (u16::try_from(inner_w).unwrap_or(u16::MAX).saturating_add(6)).min(max_w);
+    let modal_h = body_h
+        .saturating_add(buttons_h)
+        .saturating_add(4)
+        .min(max_h);
+
+    let x = screen.x + (screen.width.saturating_sub(modal_w)) / 2;
+    let y = screen.y + (screen.height.saturating_sub(modal_h)) / 2;
+    let rect = Rect {
+        x,
+        y,
+        width: modal_w,
+        height: modal_h,
+    };
+
+    frame.render_widget(Clear, rect);
+
     let block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .title(title)
         .title_alignment(Alignment::Center)
-        .title_style(mstyle.add_modifier(Modifier::BOLD))
-        .style(mstyle)
+        .title_style(chrome.add_modifier(Modifier::BOLD))
+        .style(chrome)
         .padding(Padding::new(2, 2, 1, 1));
-    let inner = block.inner(area);
-    frame.render_widget(block, area);
+    let inner = block.inner(rect);
+    frame.render_widget(block, rect);
 
-    // Reserve last row of the inner area for the button strip when the
-    // modal owns buttons. A 1-row gap separates body from buttons.
-    let buttons = modal_buttons(modal);
-    let body_h = if buttons.is_empty() {
-        inner.height
-    } else {
-        inner.height.saturating_sub(2)
-    };
+    // Body (no separator row between body and buttons).
+    let actual_body_h = inner.height.saturating_sub(buttons_h);
     let body_area = Rect {
         x: inner.x,
         y: inner.y,
         width: inner.width,
-        height: body_h,
+        height: actual_body_h,
     };
-
     let center_body = matches!(modal, Modal::Confirm(_) | Modal::QuitConfirm);
     let body = body_text(modal, body_area, &state.config.keymap);
-    let p = Paragraph::new(body).style(mstyle);
+    let p = Paragraph::new(body).style(chrome);
     let p = if center_body {
         p.alignment(Alignment::Center)
     } else {
@@ -460,15 +497,42 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
     if !buttons.is_empty() {
         let row = Rect {
             x: inner.x,
-            y: inner.y + body_h + 1, // 1-row gap below body
+            y: inner.y + actual_body_h,
             width: inner.width,
             height: 1,
         };
-        let line = button_row(theme, &buttons);
+        let line = button_row(chrome, &buttons);
         let p = Paragraph::new(line)
-            .style(mstyle)
+            .style(chrome)
             .alignment(Alignment::Center);
         frame.render_widget(p, row);
+    }
+}
+
+fn buttons_strip_width(buttons: &[ButtonSpec]) -> usize {
+    if buttons.is_empty() {
+        return 0;
+    }
+    let labels: usize = buttons.iter().map(|b| b.label.chars().count() + 2).sum();
+    let separators = 3 * (buttons.len() - 1);
+    labels + separators
+}
+
+fn modal_chrome(modal: &Modal) -> ratatui::style::Style {
+    use mx_core::state::ConfirmKind;
+    use ratatui::style::{Color as RColor, Style};
+    let is_delete = matches!(
+        modal,
+        Modal::Confirm(d) if matches!(d.kind, ConfirmKind::Delete { .. })
+    );
+    if is_delete {
+        Style::default()
+            .bg(RColor::Rgb(0xaa, 0x00, 0x00))
+            .fg(RColor::Rgb(0xff, 0xff, 0xff))
+    } else {
+        Style::default()
+            .bg(RColor::Rgb(0xc0, 0xc0, 0xc0))
+            .fg(RColor::Rgb(0x00, 0x00, 0x00))
     }
 }
 
@@ -566,26 +630,26 @@ fn modal_buttons(modal: &Modal) -> Vec<ButtonSpec> {
 }
 
 fn button_row<'a>(
-    theme: &mx_core::theme::Theme,
+    chrome: ratatui::style::Style,
     buttons: &[ButtonSpec],
 ) -> ratatui::text::Line<'a> {
-    use ratatui::style::{Modifier, Style};
+    use ratatui::style::{Color as RColor, Modifier, Style};
     use ratatui::text::Span;
     let mut spans: Vec<Span<'a>> = Vec::with_capacity(buttons.len() * 2);
     for (i, b) in buttons.iter().enumerate() {
         if i > 0 {
-            spans.push(Span::raw("   "));
+            spans.push(Span::styled("   ", chrome));
         }
         let label = format!(" {} ", b.label);
         let style = if b.focused {
+            // Yellow highlight (Far convention); fg re-uses the chrome's
+            // background so contrast holds on both white and red dialogs.
             Style::default()
-                .bg(crate::theme_styles::rcolor(theme.accent))
-                .fg(crate::theme_styles::rcolor(theme.modal_bg))
+                .bg(RColor::Rgb(0xff, 0xff, 0x55))
+                .fg(chrome.bg.unwrap_or(RColor::Black))
                 .add_modifier(Modifier::BOLD)
         } else {
-            Style::default()
-                .bg(crate::theme_styles::rcolor(theme.modal_bg))
-                .fg(crate::theme_styles::rcolor(theme.modal_fg))
+            chrome
         };
         spans.push(Span::styled(label, style));
     }

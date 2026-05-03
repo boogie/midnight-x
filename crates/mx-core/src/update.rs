@@ -706,16 +706,9 @@ fn build_op_dialog(state: &State, verb: OpVerb) -> Option<crate::state::OpDialog
         return None;
     }
     let other = state.focus.other();
-    let mut target = state.panels[other.index()].cwd.to_string();
-    // For a single source, append its name so the user sees the full target.
-    if src.len() == 1 {
-        if let Some(name) = src[0].file_name() {
-            if !target.ends_with('/') {
-                target.push('/');
-            }
-            target.push_str(name);
-        }
-    }
+    // Pre-fill with the destination *directory* only. The worker appends each
+    // source's basename, so including the basename here would double it.
+    let target = state.panels[other.index()].cwd.to_string();
     let cursor = target.len();
     let (title, prompt, action_button, kind) = match verb {
         OpVerb::Copy => {

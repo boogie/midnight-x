@@ -283,7 +283,7 @@ fn run_copy_worker(
         if cancel.load(Ordering::Relaxed) {
             break;
         }
-        let dst = dst_dir.join(src.file_name().unwrap_or(""));
+        let dst = resolve_dst(&dst_dir, src, src_list.len());
         let report = crate::copy::copy_tree(src, &dst, &cancel, &progress, &handler);
         all_errors.extend(report.errors);
     }
@@ -355,7 +355,7 @@ fn run_move_worker(
         if cancel.load(Ordering::Relaxed) {
             break;
         }
-        let dst = dst_dir.join(src.file_name().unwrap_or(""));
+        let dst = resolve_dst(&dst_dir, src, src_list.len());
         let report = crate::move_op::move_tree(&backend, src, &dst, &cancel, &progress, &handler);
         all_errors.extend(report.errors);
     }
@@ -365,6 +365,27 @@ fn run_move_worker(
         WorkerMsg::Failed { errors: all_errors }
     };
     let _ = tx_main.send(Event::Worker(id, msg));
+}
+
+/// `cp` / `mv` destination resolution.
+///
+/// * Multiple sources: target *must* be a directory; we append basename.
+/// * Single source + target is an existing directory: append basename.
+/// * Single source + target doesn't exist (or is a file): use literally
+///   (i.e. user is renaming during the operation).
+fn resolve_dst(
+    dst: &camino::Utf8Path,
+    src: &camino::Utf8Path,
+    src_count: usize,
+) -> camino::Utf8PathBuf {
+    let basename = src.file_name().unwrap_or("");
+    if src_count > 1 {
+        return dst.join(basename);
+    }
+    match std::fs::metadata(dst) {
+        Ok(m) if m.is_dir() => dst.join(basename),
+        _ => dst.to_path_buf(),
+    }
 }
 
 fn policy_to_action(p: OverwritePolicy) -> crate::copy::OverwriteAction {
