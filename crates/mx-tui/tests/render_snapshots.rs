@@ -148,6 +148,81 @@ fn help_modal_open() {
 }
 
 #[test]
+fn confirm_modal_two_buttons() {
+    use mx_core::state::{ConfirmButton, ConfirmDialog, ConfirmKind, Modal};
+    let mut s = fresh(Theme::CLASSIC);
+    s.modal = Some(Modal::Confirm(ConfirmDialog {
+        title: "Confirm delete".into(),
+        body: "Delete /tmp/x.txt?".into(),
+        buttons: vec![ConfirmButton::No, ConfirmButton::Yes],
+        focused: 0,
+        kind: ConfirmKind::Delete { paths: vec!["/tmp/x.txt".into()] },
+    }));
+    let buf = draw_to_buffer(
+        &s,
+        Rect { x: 0, y: 0, width: 100, height: 30 },
+    );
+    insta::assert_snapshot!("confirm_classic_wide", buffer_snapshot(&buf));
+}
+
+#[test]
+fn input_modal_with_value() {
+    use mx_core::state::{InputDialog, InputKind, Modal};
+    let mut s = fresh(Theme::CLASSIC);
+    s.modal = Some(Modal::Input(InputDialog {
+        title: "Make directory".into(),
+        prompt: "name:".into(),
+        value: "newdir".into(),
+        cursor: 6,
+        kind: InputKind::Mkdir { parent: "/tmp".into() },
+    }));
+    let buf = draw_to_buffer(
+        &s,
+        Rect { x: 0, y: 0, width: 100, height: 30 },
+    );
+    insta::assert_snapshot!("input_classic_wide", buffer_snapshot(&buf));
+}
+
+#[test]
+fn progress_modal_at_50_percent() {
+    use mx_core::event::WorkerId;
+    use mx_core::state::{Modal, ProgressDialog};
+    let mut s = fresh(Theme::CLASSIC);
+    s.modal = Some(Modal::Progress(ProgressDialog {
+        title: "Working…".into(),
+        current_path: "/tmp/big.bin".into(),
+        bytes_done: 50_000_000,
+        bytes_total: 100_000_000,
+        worker_id: WorkerId(1),
+    }));
+    let buf = draw_to_buffer(
+        &s,
+        Rect { x: 0, y: 0, width: 100, height: 30 },
+    );
+    insta::assert_snapshot!("progress_classic_wide", buffer_snapshot(&buf));
+}
+
+#[test]
+fn error_modal_with_details() {
+    use mx_core::state::{ErrorDialog, Modal};
+    let mut s = fresh(Theme::CLASSIC);
+    s.modal = Some(Modal::Error(ErrorDialog {
+        title: "Operation failed".into(),
+        body: "3 errors".into(),
+        details: vec![
+            "/x/a: permission denied".into(),
+            "/x/b: not found".into(),
+            "/x/c: io: disk full".into(),
+        ],
+    }));
+    let buf = draw_to_buffer(
+        &s,
+        Rect { x: 0, y: 0, width: 100, height: 30 },
+    );
+    insta::assert_snapshot!("error_classic_wide", buffer_snapshot(&buf));
+}
+
+#[test]
 fn viewer_modal_with_content() {
     use mx_core::state::{Modal, ViewerDialog};
     let mut s = fresh(Theme::CLASSIC);

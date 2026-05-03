@@ -429,7 +429,7 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
         Modal::QuitConfirm => {
             "Workers are still running. Quit anyway?\n\n[ Yes ]   [ No ]".to_string()
         }
-        Modal::Error(d) => d.body.clone(),
+        Modal::Error(d) => render_error_body(d),
         Modal::Confirm(d) => render_confirm_body(d),
         Modal::Input(d) => render_input_body(d),
         Modal::Progress(d) => render_progress_body(d, area),
@@ -639,6 +639,22 @@ fn render_progress_body(d: &mx_core::state::ProgressDialog, area: Rect) -> Strin
     }
     out.push_str("\n\n");
     out.push_str(" Esc / Ctrl-C = Cancel ");
+    out
+}
+
+fn render_error_body(d: &mx_core::state::ErrorDialog) -> String {
+    let mut out = String::new();
+    out.push_str(&d.body);
+    if !d.details.is_empty() {
+        out.push_str("\n\n");
+        out.push_str("Details:\n");
+        for line in &d.details {
+            out.push_str("  ");
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+    out.push_str("\n[ OK ]");
     out
 }
 
