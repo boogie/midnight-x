@@ -2,7 +2,7 @@
 source: crates/mx-tui/tests/render_snapshots.rs
 expression: buffer_snapshot(&buf)
 ---
-╔═════════════════════════ ~/proj ╤═══════╤════════════════╗
+╔═════════════════════════ /proj ═╤═══════╤════════════════╗
 ║               Name              │ Size  │    Modified    ║
 ║ ..                              │   <Up>│                ║
 ║ src                             │  <Dir>│                ║

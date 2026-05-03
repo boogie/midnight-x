@@ -13,7 +13,10 @@ fn fresh(theme: Theme) -> State {
         theme,
         ..Config::default()
     };
-    let mut s = State::new(Arc::new(c), "/Users/boogie".into(), "/tmp".into());
+    // Use HOME-independent paths so snapshots don't depend on $HOME
+    // (shorten_home would otherwise rewrite the panel title differently
+    // on CI vs local).
+    let mut s = State::new(Arc::new(c), "/proj".into(), "/tmp".into());
     s.focus = PanelSide::Left;
     s
 }
@@ -69,7 +72,7 @@ fn populated_state(theme: Theme) -> State {
         theme,
         ..Config::default()
     };
-    let mut s = State::new(Arc::new(c), "/Users/boogie/proj".into(), "/tmp".into());
+    let mut s = State::new(Arc::new(c), "/proj".into(), "/tmp".into());
     s.focus = PanelSide::Left;
     let entries = vec![
         DirEntry::parent(),
