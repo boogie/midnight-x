@@ -54,11 +54,25 @@ pub enum CommandId {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
     RescanDir(crate::state::PanelSide),
-    StartCopy   { src: Vec<Utf8PathBuf>, dst: Utf8PathBuf },
-    StartMove   { src: Vec<Utf8PathBuf>, dst: Utf8PathBuf },
-    StartDelete { paths: Vec<Utf8PathBuf> },
-    Mkdir       { parent: Utf8PathBuf, name: String },
-    Rename      { from: Utf8PathBuf, to: Utf8PathBuf },
+    StartCopy {
+        src: Vec<Utf8PathBuf>,
+        dst: Utf8PathBuf,
+    },
+    StartMove {
+        src: Vec<Utf8PathBuf>,
+        dst: Utf8PathBuf,
+    },
+    StartDelete {
+        paths: Vec<Utf8PathBuf>,
+    },
+    Mkdir {
+        parent: Utf8PathBuf,
+        name: String,
+    },
+    Rename {
+        from: Utf8PathBuf,
+        to: Utf8PathBuf,
+    },
     CancelWorker(WorkerId),
     OpenViewer(Utf8PathBuf),
     Quit,
@@ -71,7 +85,9 @@ mod tests {
     #[test]
     fn command_id_deserializes_from_snake_case() {
         #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-        struct W { id: CommandId }
+        struct W {
+            id: CommandId,
+        }
         let w: W = toml::from_str(r#"id = "quit_confirm""#).unwrap();
         assert_eq!(w.id, CommandId::QuitConfirm);
     }
@@ -79,8 +95,12 @@ mod tests {
     #[test]
     fn command_id_round_trips_through_toml() {
         #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-        struct W { id: CommandId }
-        let w = W { id: CommandId::CycleSort };
+        struct W {
+            id: CommandId,
+        }
+        let w = W {
+            id: CommandId::CycleSort,
+        };
         let s = toml::to_string(&w).unwrap();
         assert!(s.contains("cycle_sort"), "got {s}");
         let back: W = toml::from_str(&s).unwrap();

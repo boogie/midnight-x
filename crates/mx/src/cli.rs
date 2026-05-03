@@ -30,9 +30,15 @@ where
     S: Into<std::ffi::OsString> + Clone,
 {
     let mut a = pico_args::Arguments::from_vec(args.into_iter().map(Into::into).collect());
-    if a.contains(["-h", "--help"])    { return Ok(CliAction::PrintHelp); }
-    if a.contains(["-V", "--version"]) { return Ok(CliAction::PrintVersion); }
-    if a.contains("--print-default-config") { return Ok(CliAction::PrintDefaultConfig); }
+    if a.contains(["-h", "--help"]) {
+        return Ok(CliAction::PrintHelp);
+    }
+    if a.contains(["-V", "--version"]) {
+        return Ok(CliAction::PrintVersion);
+    }
+    if a.contains("--print-default-config") {
+        return Ok(CliAction::PrintDefaultConfig);
+    }
 
     let config: Option<PathBuf> = a
         .opt_value_from_str("--config")
@@ -73,13 +79,16 @@ mod tests {
 
     #[test]
     fn version_flag() {
-        assert_eq!(parse(["-V"]).unwrap(),         CliAction::PrintVersion);
-        assert_eq!(parse(["--version"]).unwrap(),  CliAction::PrintVersion);
+        assert_eq!(parse(["-V"]).unwrap(), CliAction::PrintVersion);
+        assert_eq!(parse(["--version"]).unwrap(), CliAction::PrintVersion);
     }
 
     #[test]
     fn print_default_config_flag() {
-        assert_eq!(parse(["--print-default-config"]).unwrap(), CliAction::PrintDefaultConfig);
+        assert_eq!(
+            parse(["--print-default-config"]).unwrap(),
+            CliAction::PrintDefaultConfig
+        );
     }
 
     #[test]

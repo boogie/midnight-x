@@ -62,7 +62,9 @@ mod tests {
     fn event_can_wrap_input_command_and_tick() {
         let _: Event = Event::Input(InputEvent::Key(KeyChord::bare(KeyCode::Esc)));
         let _: Event = Event::Command(CommandId::Quit);
-        let _: Event = Event::Tick { dt: Duration::from_millis(100) };
+        let _: Event = Event::Tick {
+            dt: Duration::from_millis(100),
+        };
     }
 
     #[test]

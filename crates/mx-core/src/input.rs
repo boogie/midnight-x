@@ -30,20 +30,39 @@ pub enum KeyCode {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub struct KeyModifiers {
-    pub ctrl:  bool,
+    pub ctrl: bool,
     pub shift: bool,
-    pub alt:   bool,
+    pub alt: bool,
 }
 
 impl KeyModifiers {
-    pub const NONE: Self = Self { ctrl: false, shift: false, alt: false };
+    pub const NONE: Self = Self {
+        ctrl: false,
+        shift: false,
+        alt: false,
+    };
 
     #[must_use]
-    pub const fn ctrl()  -> Self { Self { ctrl: true,  ..Self::NONE } }
+    pub const fn ctrl() -> Self {
+        Self {
+            ctrl: true,
+            ..Self::NONE
+        }
+    }
     #[must_use]
-    pub const fn shift() -> Self { Self { shift: true, ..Self::NONE } }
+    pub const fn shift() -> Self {
+        Self {
+            shift: true,
+            ..Self::NONE
+        }
+    }
     #[must_use]
-    pub const fn alt()   -> Self { Self { alt: true,   ..Self::NONE } }
+    pub const fn alt() -> Self {
+        Self {
+            alt: true,
+            ..Self::NONE
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -61,7 +80,10 @@ impl KeyChord {
     /// Convenience: a chord with no modifiers.
     #[must_use]
     pub const fn bare(code: KeyCode) -> Self {
-        Self { code, mods: KeyModifiers::NONE }
+        Self {
+            code,
+            mods: KeyModifiers::NONE,
+        }
     }
 }
 

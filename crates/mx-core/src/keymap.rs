@@ -23,7 +23,7 @@ pub struct Keymap {
     /// (de)serialized.
     bindings: Vec<(Vec<KeyChord>, CommandId)>,
     #[serde(skip)]
-    by_seq:   HashMap<Vec<KeyChord>, CommandId>,
+    by_seq: HashMap<Vec<KeyChord>, CommandId>,
 }
 
 impl PartialEq for Keymap {
@@ -38,13 +38,18 @@ impl Eq for Keymap {}
 
 impl Keymap {
     #[must_use]
-    pub fn empty() -> Self { Self::default() }
+    pub fn empty() -> Self {
+        Self::default()
+    }
 
     /// Build from a list of (sequence, command) pairs. Later entries override
     /// earlier ones with the same key sequence.
     #[must_use]
     pub fn from_bindings(bindings: Vec<(Vec<KeyChord>, CommandId)>) -> Self {
-        let mut k = Self { bindings: Vec::new(), by_seq: HashMap::new() };
+        let mut k = Self {
+            bindings: Vec::new(),
+            by_seq: HashMap::new(),
+        };
         for (seq, cmd) in bindings {
             k.set(seq, cmd);
         }
@@ -94,13 +99,13 @@ impl Keymap {
     pub fn defaults() -> Self {
         use CommandId::{
             Cancel, Copy, CursorDown, CursorEnd, CursorHome, CursorPageDown, CursorPageUp,
-            CursorUp, CycleSort, Delete, EnterDir, FocusOther, Help, InvertSelection, Mkdir,
-            Move, ParentDir, QuitConfirm, Rename, RescanFocused, SelectAll, SwapPanels,
-            ToggleHidden, ToggleSelect, View,
+            CursorUp, CycleSort, Delete, EnterDir, FocusOther, Help, InvertSelection, Mkdir, Move,
+            ParentDir, QuitConfirm, Rename, RescanFocused, SelectAll, SwapPanels, ToggleHidden,
+            ToggleSelect, View,
         };
         use KeyCode::{
-            Backspace, Char, Delete as DelKey, Down, End, Enter, Esc, F, Home, Insert, PageDown,
-            PageUp, Tab, Up,
+            Backspace, Char, Delete as DelKey, Down, End, Enter, Esc, Home, Insert, PageDown,
+            PageUp, Tab, Up, F,
         };
 
         let none = KeyModifiers::NONE;
@@ -112,38 +117,38 @@ impl Keymap {
 
         let bindings: Vec<(Vec<KeyChord>, CommandId)> = vec![
             // Navigation
-            (vec![kc(Up)],          CursorUp),
-            (vec![kc(Down)],        CursorDown),
-            (vec![kc(PageUp)],      CursorPageUp),
-            (vec![kc(PageDown)],    CursorPageDown),
-            (vec![kc(Home)],        CursorHome),
-            (vec![kc(End)],         CursorEnd),
-            (vec![kc(Enter)],       EnterDir),
-            (vec![kc(Backspace)],   ParentDir),
-            (vec![kc(Tab)],         FocusOther),
-            (vec![ck(Char('u'))],   SwapPanels),
+            (vec![kc(Up)], CursorUp),
+            (vec![kc(Down)], CursorDown),
+            (vec![kc(PageUp)], CursorPageUp),
+            (vec![kc(PageDown)], CursorPageDown),
+            (vec![kc(Home)], CursorHome),
+            (vec![kc(End)], CursorEnd),
+            (vec![kc(Enter)], EnterDir),
+            (vec![kc(Backspace)], ParentDir),
+            (vec![kc(Tab)], FocusOther),
+            (vec![ck(Char('u'))], SwapPanels),
             // Selection
-            (vec![kc(Insert)],      ToggleSelect),
-            (vec![kc(Char('*'))],   InvertSelection),
-            (vec![ck(Char('a'))],   SelectAll),
+            (vec![kc(Insert)], ToggleSelect),
+            (vec![kc(Char('*'))], InvertSelection),
+            (vec![ck(Char('a'))], SelectAll),
             // F-keys
-            (vec![kc(F(1))],        Help),
-            (vec![kc(F(3))],        View),
-            (vec![kc(F(5))],        Copy),
-            (vec![kc(F(6))],        Move),
-            (vec![kc(F(7))],        Mkdir),
-            (vec![kc(F(8))],        Delete),
-            (vec![kc(DelKey)],      Delete),
-            (vec![sk(F(6))],        Rename),
-            (vec![ck(Char('t'))],   Rename),
-            (vec![kc(F(10))],       QuitConfirm),
-            (vec![ck(Char('q'))],   QuitConfirm),
+            (vec![kc(F(1))], Help),
+            (vec![kc(F(3))], View),
+            (vec![kc(F(5))], Copy),
+            (vec![kc(F(6))], Move),
+            (vec![kc(F(7))], Mkdir),
+            (vec![kc(F(8))], Delete),
+            (vec![kc(DelKey)], Delete),
+            (vec![sk(F(6))], Rename),
+            (vec![ck(Char('t'))], Rename),
+            (vec![kc(F(10))], QuitConfirm),
+            (vec![ck(Char('q'))], QuitConfirm),
             // Refresh / view toggles
-            (vec![ck(Char('r'))],   RescanFocused),
-            (vec![ck(Char('h'))],   ToggleHidden),
-            (vec![ck(Char('s'))],   CycleSort),
+            (vec![ck(Char('r'))], RescanFocused),
+            (vec![ck(Char('h'))], ToggleHidden),
+            (vec![ck(Char('s'))], CycleSort),
             // Esc alone — Cancel
-            (vec![kc(Esc)],         Cancel),
+            (vec![kc(Esc)], Cancel),
             // Esc-prefix chords (MC alt-meta style)
             (vec![kc(Esc), kc(Char('1'))], Help),
             (vec![kc(Esc), kc(Char('3'))], View),
@@ -163,19 +168,27 @@ mod tests {
     use crate::command::CommandId;
     use crate::input::{KeyChord, KeyCode};
 
-    fn kc(c: KeyCode) -> KeyChord { KeyChord::bare(c) }
+    fn kc(c: KeyCode) -> KeyChord {
+        KeyChord::bare(c)
+    }
 
     #[test]
     fn match_returns_command_id() {
         let k = Keymap::defaults();
-        assert_eq!(k.lookup(&[kc(KeyCode::F(5))]), Lookup::Match(CommandId::Copy));
+        assert_eq!(
+            k.lookup(&[kc(KeyCode::F(5))]),
+            Lookup::Match(CommandId::Copy)
+        );
     }
 
     #[test]
     fn esc_alone_is_cancel_and_also_a_prefix() {
         let k = Keymap::defaults();
         // Esc alone is a complete binding (Cancel)…
-        assert_eq!(k.lookup(&[kc(KeyCode::Esc)]), Lookup::Match(CommandId::Cancel));
+        assert_eq!(
+            k.lookup(&[kc(KeyCode::Esc)]),
+            Lookup::Match(CommandId::Cancel)
+        );
         // …but it's also a prefix of Esc-N chords. The chord-engine in
         // `update()` is what disambiguates via timeout; the keymap just
         // reports what it knows.
@@ -208,9 +221,7 @@ mod tests {
         use crate::input::KeyModifiers;
         let a = KeyChord::new(KeyCode::Char('a'), KeyModifiers::NONE);
         let b = KeyChord::new(KeyCode::Char('b'), KeyModifiers::NONE);
-        let k = Keymap::from_bindings(vec![
-            (vec![a, b], CommandId::Help),
-        ]);
+        let k = Keymap::from_bindings(vec![(vec![a, b], CommandId::Help)]);
         assert_eq!(k.lookup(&[a]), Lookup::Prefix);
         assert_eq!(k.lookup(&[a, b]), Lookup::Match(CommandId::Help));
     }

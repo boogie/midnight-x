@@ -28,7 +28,11 @@ pub enum FsError {
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum AppError {
     #[error("filesystem error at {path}: {source}")]
-    Fs { path: Utf8PathBuf, #[source] source: FsError },
+    Fs {
+        path: Utf8PathBuf,
+        #[source]
+        source: FsError,
+    },
     #[error("config: {0}")]
     Config(String),
     #[error("internal: {0}")]
@@ -44,7 +48,10 @@ pub struct ConfigWarning {
 impl ConfigWarning {
     #[must_use]
     pub fn new(key: impl Into<String>, message: impl Into<String>) -> Self {
-        Self { key: key.into(), message: message.into() }
+        Self {
+            key: key.into(),
+            message: message.into(),
+        }
     }
 }
 
@@ -61,7 +68,10 @@ mod tests {
     #[test]
     fn app_error_includes_path_and_source() {
         let p: Utf8PathBuf = "/tmp/x".into();
-        let e = AppError::Fs { path: p.clone(), source: FsError::PermissionDenied };
+        let e = AppError::Fs {
+            path: p.clone(),
+            source: FsError::PermissionDenied,
+        };
         assert!(e.to_string().contains("/tmp/x"));
         assert!(e.to_string().contains("permission denied"));
     }

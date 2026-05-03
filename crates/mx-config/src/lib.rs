@@ -61,11 +61,11 @@ pub fn parse_str(s: &str) -> Result<(Config, Vec<ConfigWarning>), ConfigError> {
 
 #[derive(Debug, Default, Deserialize)]
 struct TopLevel {
-    ui:      Option<UiConfig>,
-    input:   Option<InputConfig>,
-    ops:     Option<OpsConfig>,
+    ui: Option<UiConfig>,
+    input: Option<InputConfig>,
+    ops: Option<OpsConfig>,
     logging: Option<LoggingConfig>,
-    keymap:  Option<toml::Table>,
+    keymap: Option<toml::Table>,
 }
 
 fn resolve(doc: TopLevel) -> (Config, Vec<ConfigWarning>) {
@@ -107,16 +107,16 @@ fn resolve(doc: TopLevel) -> (Config, Vec<ConfigWarning>) {
             };
             let cmd_str = value.as_str().map(str::to_owned);
             match cmd_str.as_deref() {
-                Some("<unbind>") => { keymap.unbind(&seq); }
-                Some(s) => {
-                    match toml::from_str::<CmdHolder>(&format!("v = \"{s}\"")) {
-                        Ok(holder) => keymap.set(seq, holder.v),
-                        Err(_) => warnings.push(ConfigWarning::new(
-                            format!("keymap.\"{key}\""),
-                            format!("unknown command \"{s}\""),
-                        )),
-                    }
+                Some("<unbind>") => {
+                    keymap.unbind(&seq);
                 }
+                Some(s) => match toml::from_str::<CmdHolder>(&format!("v = \"{s}\"")) {
+                    Ok(holder) => keymap.set(seq, holder.v),
+                    Err(_) => warnings.push(ConfigWarning::new(
+                        format!("keymap.\"{key}\""),
+                        format!("unknown command \"{s}\""),
+                    )),
+                },
                 None => warnings.push(ConfigWarning::new(
                     format!("keymap.\"{key}\""),
                     "value must be a string",
@@ -125,12 +125,21 @@ fn resolve(doc: TopLevel) -> (Config, Vec<ConfigWarning>) {
         }
     }
 
-    let config = Config { ui, input, ops, keymap, theme, logging };
+    let config = Config {
+        ui,
+        input,
+        ops,
+        keymap,
+        theme,
+        logging,
+    };
     (config, warnings)
 }
 
 #[derive(Deserialize)]
-struct CmdHolder { v: CommandId }
+struct CmdHolder {
+    v: CommandId,
+}
 
 #[cfg(test)]
 mod tests {
@@ -142,7 +151,10 @@ mod tests {
     #[test]
     fn embedded_default_yields_default_config() {
         let (c, warnings) = parse_str(DEFAULT_CONFIG_TOML).unwrap();
-        assert!(warnings.is_empty(), "default config must yield no warnings: {warnings:?}");
+        assert!(
+            warnings.is_empty(),
+            "default config must yield no warnings: {warnings:?}"
+        );
         assert_eq!(c.ui, UiConfig::default());
         assert_eq!(c.theme, Theme::CLASSIC);
     }
@@ -195,7 +207,9 @@ theme = "midnight"
 "ctrl-c" = "explode_universe"
 "#;
         let (_, warnings) = parse_str(toml).unwrap();
-        assert!(warnings.iter().any(|w| w.message.contains("unknown command")));
+        assert!(warnings
+            .iter()
+            .any(|w| w.message.contains("unknown command")));
     }
 
     #[test]

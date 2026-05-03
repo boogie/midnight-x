@@ -9,8 +9,8 @@ use ratatui::style::{Color as RColor, Modifier, Style};
 pub fn rcolor(c: Color) -> RColor {
     match c {
         Color::Hex(r, g, b) => RColor::Rgb(r, g, b),
-        Color::Ansi(n)      => RColor::Indexed(n),
-        Color::Default      => RColor::Reset,
+        Color::Ansi(n) => RColor::Indexed(n),
+        Color::Default => RColor::Reset,
     }
 }
 
@@ -31,12 +31,16 @@ pub fn panel_title_style(t: &Theme, focused: bool) -> Style {
 
 #[must_use]
 pub fn status_style(t: &Theme) -> Style {
-    Style::default().bg(rcolor(t.status_bg)).fg(rcolor(t.status_fg))
+    Style::default()
+        .bg(rcolor(t.status_bg))
+        .fg(rcolor(t.status_fg))
 }
 
 #[must_use]
 pub fn modal_style(t: &Theme) -> Style {
-    Style::default().bg(rcolor(t.modal_bg)).fg(rcolor(t.modal_fg))
+    Style::default()
+        .bg(rcolor(t.modal_bg))
+        .fg(rcolor(t.modal_fg))
 }
 
 #[cfg(test)]

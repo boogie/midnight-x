@@ -20,33 +20,33 @@ pub fn translate(ev: ct::Event) -> Option<InputEvent> {
 }
 
 fn translate_key(k: ct::KeyEvent) -> KeyChord {
-    #[allow(clippy::match_same_arms)]  // wildcard collapses unmodeled keys to Null
+    #[allow(clippy::match_same_arms)] // wildcard collapses unmodeled keys to Null
     let code = match k.code {
-        ct::KeyCode::Char(c)   => KeyCode::Char(c),
-        ct::KeyCode::Enter     => KeyCode::Enter,
-        ct::KeyCode::Esc       => KeyCode::Esc,
-        ct::KeyCode::Tab       => KeyCode::Tab,
-        ct::KeyCode::BackTab   => KeyCode::BackTab,
+        ct::KeyCode::Char(c) => KeyCode::Char(c),
+        ct::KeyCode::Enter => KeyCode::Enter,
+        ct::KeyCode::Esc => KeyCode::Esc,
+        ct::KeyCode::Tab => KeyCode::Tab,
+        ct::KeyCode::BackTab => KeyCode::BackTab,
         ct::KeyCode::Backspace => KeyCode::Backspace,
-        ct::KeyCode::Delete    => KeyCode::Delete,
-        ct::KeyCode::Insert    => KeyCode::Insert,
-        ct::KeyCode::Home      => KeyCode::Home,
-        ct::KeyCode::End       => KeyCode::End,
-        ct::KeyCode::PageUp    => KeyCode::PageUp,
-        ct::KeyCode::PageDown  => KeyCode::PageDown,
-        ct::KeyCode::Up        => KeyCode::Up,
-        ct::KeyCode::Down      => KeyCode::Down,
-        ct::KeyCode::Left      => KeyCode::Left,
-        ct::KeyCode::Right     => KeyCode::Right,
-        ct::KeyCode::F(n)      => KeyCode::F(n),
+        ct::KeyCode::Delete => KeyCode::Delete,
+        ct::KeyCode::Insert => KeyCode::Insert,
+        ct::KeyCode::Home => KeyCode::Home,
+        ct::KeyCode::End => KeyCode::End,
+        ct::KeyCode::PageUp => KeyCode::PageUp,
+        ct::KeyCode::PageDown => KeyCode::PageDown,
+        ct::KeyCode::Up => KeyCode::Up,
+        ct::KeyCode::Down => KeyCode::Down,
+        ct::KeyCode::Left => KeyCode::Left,
+        ct::KeyCode::Right => KeyCode::Right,
+        ct::KeyCode::F(n) => KeyCode::F(n),
         // `Null` is its own variant; CapsLock, MediaKey, etc. fall into the
         // wildcard. Both flatten to `KeyCode::Null` in Phase 1.
-        _                      => KeyCode::Null,
+        _ => KeyCode::Null,
     };
     let mods = KeyModifiers {
-        ctrl:  k.modifiers.contains(ct::KeyModifiers::CONTROL),
+        ctrl: k.modifiers.contains(ct::KeyModifiers::CONTROL),
         shift: k.modifiers.contains(ct::KeyModifiers::SHIFT),
-        alt:   k.modifiers.contains(ct::KeyModifiers::ALT),
+        alt: k.modifiers.contains(ct::KeyModifiers::ALT),
     };
     KeyChord { code, mods }
 }
@@ -80,10 +80,7 @@ mod tests {
 
     #[test]
     fn f5_translates() {
-        let ev = ct::Event::Key(ct::KeyEvent::new(
-            ct::KeyCode::F(5),
-            ct::KeyModifiers::NONE,
-        ));
+        let ev = ct::Event::Key(ct::KeyEvent::new(ct::KeyCode::F(5), ct::KeyModifiers::NONE));
         match translate(ev).unwrap() {
             InputEvent::Key(c) => assert_eq!(c.code, KeyCode::F(5)),
             _ => panic!(),

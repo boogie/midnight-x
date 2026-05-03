@@ -61,7 +61,9 @@ pub fn run(config: Config) -> Result<()> {
             // Command variants are unreachable in Phase 1 and ignored.
         }
 
-        if state.should_quit { break 'main; }
+        if state.should_quit {
+            break 'main;
+        }
 
         let now = Instant::now();
         let dt = now.saturating_duration_since(last_frame);

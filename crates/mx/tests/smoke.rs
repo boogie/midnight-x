@@ -36,7 +36,10 @@ fn print_default_config_round_trips() {
     assert!(text.contains("\"classic\""));
     // Parse it; must not warn.
     let (_cfg, warnings) = mx_config::parse_str(&text).expect("default must parse");
-    assert!(warnings.is_empty(), "default config emits warnings: {warnings:?}");
+    assert!(
+        warnings.is_empty(),
+        "default config emits warnings: {warnings:?}"
+    );
 }
 
 #[test]

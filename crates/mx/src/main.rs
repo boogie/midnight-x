@@ -45,8 +45,7 @@ fn run(opts: &RunOpts) -> Result<()> {
     install_logging();
     panic_hook::install();
 
-    let (config, warnings) =
-        mx_config::load(opts.config.as_deref()).context("loading config")?;
+    let (config, warnings) = mx_config::load(opts.config.as_deref()).context("loading config")?;
     if !warnings.is_empty() {
         for w in &warnings {
             tracing::warn!(key = %w.key, msg = %w.message, "config warning");

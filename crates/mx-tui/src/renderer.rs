@@ -28,12 +28,15 @@ pub trait Effect: Send {
 
 pub struct Renderer<B: Backend> {
     pub terminal: Terminal<B>,
-    pub effects:  Vec<Box<dyn Effect>>,
+    pub effects: Vec<Box<dyn Effect>>,
 }
 
 impl<B: Backend> Renderer<B> {
     pub fn new(terminal: Terminal<B>) -> Self {
-        Self { terminal, effects: Vec::new() }
+        Self {
+            terminal,
+            effects: Vec::new(),
+        }
     }
 
     /// Run the four-phase render. `dt` is the elapsed wall-clock duration
@@ -44,7 +47,12 @@ impl<B: Backend> Renderer<B> {
     /// Propagates any `io::Error` from terminal size queries or `draw`.
     pub fn draw(&mut self, state: &State, dt: Duration) -> io::Result<()> {
         let size = self.terminal.size()?;
-        let area = Rect { x: 0, y: 0, width: size.width, height: size.height };
+        let area = Rect {
+            x: 0,
+            y: 0,
+            width: size.width,
+            height: size.height,
+        };
         let layout = compute(area, state.config.ui.panel_ratio, state.modal.is_some());
 
         // Split-borrow self into its two disjoint fields so the closure can
@@ -75,7 +83,9 @@ pub fn draw_to_buffer(state: &State, area: Rect) -> Buffer {
     let backend = TestBackend::new(area.width, area.height);
     let term = Terminal::new(backend).expect("TestBackend Terminal cannot fail");
     let mut renderer = Renderer::new(term);
-    renderer.draw(state, Duration::ZERO).expect("TestBackend draw cannot fail");
+    renderer
+        .draw(state, Duration::ZERO)
+        .expect("TestBackend draw cannot fail");
     renderer.terminal.backend().buffer().clone()
 }
 
@@ -146,7 +156,12 @@ mod tests {
     #[test]
     fn draw_to_buffer_is_deterministic() {
         let s = State::new(Arc::new(Config::default()), "/".into(), "/".into());
-        let area = Rect { x: 0, y: 0, width: 100, height: 30 };
+        let area = Rect {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 30,
+        };
         let a = draw_to_buffer(&s, area);
         let b = draw_to_buffer(&s, area);
         assert_eq!(a, b, "same state must produce identical buffers");
@@ -155,7 +170,15 @@ mod tests {
     #[test]
     fn empty_state_produces_two_panel_titles() {
         let s = State::new(Arc::new(Config::default()), "/foo".into(), "/bar".into());
-        let buf = draw_to_buffer(&s, Rect { x: 0, y: 0, width: 100, height: 30 });
+        let buf = draw_to_buffer(
+            &s,
+            Rect {
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 30,
+            },
+        );
         let snap = buffer_snapshot(&buf);
         assert!(snap.contains("/foo"));
         assert!(snap.contains("/bar"));
@@ -164,7 +187,15 @@ mod tests {
     #[test]
     fn narrow_state_only_shows_focused_panel_title() {
         let s = State::new(Arc::new(Config::default()), "/foo".into(), "/bar".into());
-        let buf = draw_to_buffer(&s, Rect { x: 0, y: 0, width: 60, height: 24 });
+        let buf = draw_to_buffer(
+            &s,
+            Rect {
+                x: 0,
+                y: 0,
+                width: 60,
+                height: 24,
+            },
+        );
         let snap = buffer_snapshot(&buf);
         assert!(snap.contains("/foo"));
         assert!(!snap.contains("/bar"));

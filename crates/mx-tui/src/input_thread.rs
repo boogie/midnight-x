@@ -15,7 +15,7 @@ use mx_core::event::Event;
 use crate::input_xlate::translate;
 
 pub struct InputThread {
-    pub handle:     JoinHandle<()>,
+    pub handle: JoinHandle<()>,
     pub should_run: Arc<AtomicBool>,
 }
 

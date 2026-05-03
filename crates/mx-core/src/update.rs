@@ -213,7 +213,10 @@ mod tests {
         Event::Input(InputEvent::Key(KeyChord::bare(c)))
     }
     fn ctrl_key(c: char) -> Event {
-        Event::Input(InputEvent::Key(KeyChord::new(KeyCode::Char(c), KeyModifiers::ctrl())))
+        Event::Input(InputEvent::Key(KeyChord::new(
+            KeyCode::Char(c),
+            KeyModifiers::ctrl(),
+        )))
     }
 
     #[test]
@@ -246,14 +249,28 @@ mod tests {
         s.modal = Some(Modal::Help);
         let (s, _) = update(s, key(KeyCode::Esc));
         // Esc-alone is also a prefix of esc-N. The chord engine waits.
-        assert!(s.modal.is_some(), "esc must wait for chord_timeout before closing");
+        assert!(
+            s.modal.is_some(),
+            "esc must wait for chord_timeout before closing"
+        );
         // Now flush via a Tick after chord_timeout.
         let one_sec_ago = Instant::now()
             .checked_sub(Duration::from_secs(1))
             .expect("monotonic clock supports 1s subtraction");
-        let s2 = State { pending_since: Some(one_sec_ago), ..s };
-        let (s3, _) = update(s2, Event::Tick { dt: Duration::from_millis(100) });
-        assert!(s3.modal.is_none(), "after timeout, esc resolves and closes the modal");
+        let s2 = State {
+            pending_since: Some(one_sec_ago),
+            ..s
+        };
+        let (s3, _) = update(
+            s2,
+            Event::Tick {
+                dt: Duration::from_millis(100),
+            },
+        );
+        assert!(
+            s3.modal.is_none(),
+            "after timeout, esc resolves and closes the modal"
+        );
     }
 
     #[test]

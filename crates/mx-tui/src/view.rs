@@ -76,35 +76,31 @@ fn render_hint(frame: &mut Frame<'_>, area: Rect, state: &State) {
     let _ = state; // reserved for context-sensitive hints in Phase 2
 }
 
-fn render_modal(
-    frame: &mut Frame<'_>,
-    area: Rect,
-    modal: &Modal,
-    theme: &mx_core::theme::Theme,
-) {
+fn render_modal(frame: &mut Frame<'_>, area: Rect, modal: &Modal, theme: &mx_core::theme::Theme) {
     frame.render_widget(Clear, area);
     let title = match modal {
-        Modal::Help        => " Help ",
+        Modal::Help => " Help ",
         Modal::QuitConfirm => " Quit? ",
-        Modal::Confirm(_)  => " Confirm ",
-        Modal::Input(_)    => " Input ",
+        Modal::Confirm(_) => " Confirm ",
+        Modal::Input(_) => " Input ",
         Modal::Progress(_) => " Working… ",
-        Modal::Error(_)    => " Error ",
+        Modal::Error(_) => " Error ",
     };
     let body = match modal {
-        Modal::Help => {
-            "Phase 1 help: F10/Ctrl-Q quits, Tab toggles focus, Esc cancels.\n\n\
+        Modal::Help => "Phase 1 help: F10/Ctrl-Q quits, Tab toggles focus, Esc cancels.\n\n\
              (Press F1 again or Esc to dismiss.)"
-                .to_string()
-        }
+            .to_string(),
         Modal::QuitConfirm => {
             "Workers are still running. Quit anyway?\n\n[ Yes ]   [ No ]".to_string()
         }
-        Modal::Error(d)    => d.body.clone(),
-        Modal::Confirm(d)  => d.body.clone(),
-        Modal::Input(d)    => format!("{}\n> {}", d.prompt, d.value),
+        Modal::Error(d) => d.body.clone(),
+        Modal::Confirm(d) => d.body.clone(),
+        Modal::Input(d) => format!("{}\n> {}", d.prompt, d.value),
         Modal::Progress(d) => {
-            format!("{}\n{} / {} bytes", d.current_path, d.bytes_done, d.bytes_total)
+            format!(
+                "{}\n{} / {} bytes",
+                d.current_path, d.bytes_done, d.bytes_total
+            )
         }
     };
     let p = Paragraph::new(body)
