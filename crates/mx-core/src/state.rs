@@ -38,11 +38,22 @@ impl PanelSide {
     }
 }
 
-/// Stand-in for full directory entries. Phase 2 fleshes this out.
+/// One row in a panel.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DirEntry {
     pub name: String,
     pub kind: EntryKind,
+    /// `Some` for files (and for resolved symlinks-to-files when followed).
+    /// `None` for directories and unreadable entries.
+    pub size: Option<u64>,
+    /// Modification time, if metadata was readable.
+    pub mtime: Option<std::time::SystemTime>,
+    /// Set when `kind == Symlink`. The string is what `read_link` returned —
+    /// it may be relative to the entry's directory.
+    pub symlink_target: Option<String>,
+    /// True when `read_link` resolved to a file/dir; false when the target
+    /// doesn't exist. Renderers display broken links in `error_fg`.
+    pub symlink_broken: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -51,6 +62,69 @@ pub enum EntryKind {
     Dir,
     Symlink,
     Unreadable,
+}
+
+impl DirEntry {
+    /// `..` row at the top of a panel (above the cwd's children).
+    #[must_use]
+    pub fn parent() -> Self {
+        Self {
+            name: "..".to_string(),
+            kind: EntryKind::Dir,
+            size: None,
+            mtime: None,
+            symlink_target: None,
+            symlink_broken: false,
+        }
+    }
+
+    #[must_use]
+    pub fn dir(name: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            kind: EntryKind::Dir,
+            size: None,
+            mtime: None,
+            symlink_target: None,
+            symlink_broken: false,
+        }
+    }
+
+    #[must_use]
+    pub fn file(name: impl Into<String>, size: u64) -> Self {
+        Self {
+            name: name.into(),
+            kind: EntryKind::File,
+            size: Some(size),
+            mtime: None,
+            symlink_target: None,
+            symlink_broken: false,
+        }
+    }
+
+    #[must_use]
+    pub fn symlink(name: impl Into<String>, target: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            kind: EntryKind::Symlink,
+            size: None,
+            mtime: None,
+            symlink_target: Some(target.into()),
+            symlink_broken: false,
+        }
+    }
+
+    #[must_use]
+    pub fn is_dir_like(&self) -> bool {
+        matches!(self.kind, EntryKind::Dir)
+    }
+
+    /// True if the entry should be hidden when `show_hidden = false`.
+    /// `..` is never hidden.
+    #[must_use]
+    pub fn is_hidden(&self) -> bool {
+        self.name != ".." && self.name.starts_with('.')
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -147,7 +221,9 @@ pub enum WorkerKind {
     Copy,
     Move,
     Delete,
-    DirScan,
+    /// Dir scan is keyed by destination panel so the executor and the
+    /// `WorkerMsg::DirScanned` handler know whose `entries` to swap.
+    DirScan(PanelSide),
 }
 
 #[derive(Debug, Clone)]
@@ -221,5 +297,29 @@ mod tests {
         assert_eq!(s.focused().cursor, 7);
         s.focus = PanelSide::Right;
         assert_eq!(s.focused().cursor, 3);
+    }
+
+    #[test]
+    fn dir_entry_constructors() {
+        let e = DirEntry::file("a.txt", 1234);
+        assert_eq!(e.name, "a.txt");
+        assert_eq!(e.kind, EntryKind::File);
+        assert_eq!(e.size, Some(1234));
+        assert!(e.symlink_target.is_none());
+
+        let d = DirEntry::dir("src");
+        assert_eq!(d.kind, EntryKind::Dir);
+        assert!(d.size.is_none());
+
+        let s = DirEntry::symlink("link", "/etc/hosts");
+        assert_eq!(s.kind, EntryKind::Symlink);
+        assert_eq!(s.symlink_target.as_deref(), Some("/etc/hosts"));
+    }
+
+    #[test]
+    fn parent_dir_entry() {
+        let p = DirEntry::parent();
+        assert_eq!(p.name, "..");
+        assert_eq!(p.kind, EntryKind::Dir);
     }
 }

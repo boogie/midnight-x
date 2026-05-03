@@ -29,9 +29,8 @@ pub enum WorkerMsg {
         current_path: Utf8PathBuf,
     },
     DirScanned {
-        // Filled out in Phase 2 once DirEntry exists.
-        // For Phase 1 we just need the variant to exist so update() can pattern-match.
-        placeholder: (),
+        side: crate::state::PanelSide,
+        entries: Vec<crate::state::DirEntry>,
     },
     Conflict {
         src: Utf8PathBuf,
