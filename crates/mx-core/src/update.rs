@@ -216,6 +216,28 @@ fn dispatch(state: &mut State, id: CommandId) -> Vec<Command> {
         }
     }
 
+    // Confirm modal: Tab cycles focus, Enter resolves, Esc cancels.
+    if let Some(Modal::Confirm(_)) = state.modal.as_ref() {
+        match id {
+            CommandId::FocusOther => {
+                if let Some(Modal::Confirm(d)) = state.modal.as_mut() {
+                    if !d.buttons.is_empty() {
+                        d.focused = (d.focused + 1) % d.buttons.len();
+                    }
+                }
+                return Vec::new();
+            }
+            CommandId::Cancel => {
+                state.modal = None;
+                return Vec::new();
+            }
+            CommandId::EnterDir => {
+                return resolve_confirm(state);
+            }
+            _ => return Vec::new(),
+        }
+    }
+
     // If a modal swallows the input, handle that first.
     if let Some(m) = &state.modal {
         match (m, id) {
@@ -464,6 +486,42 @@ fn cd_to(state: &mut State, side: PanelSide, dir: camino::Utf8PathBuf) {
     panel.loading = true;
 }
 
+fn resolve_confirm(state: &mut State) -> Vec<Command> {
+    use crate::command::OverwritePolicy as P;
+    use crate::state::{ConfirmButton, ConfirmKind, Modal};
+    let Some(Modal::Confirm(d)) = state.modal.take() else {
+        return Vec::new();
+    };
+    let button = d.buttons.get(d.focused).copied();
+    match (d.kind, button) {
+        (ConfirmKind::Delete { paths }, Some(ConfirmButton::Yes)) => {
+            vec![Command::StartDelete { paths }]
+        }
+        (ConfirmKind::StartCopy { src, dst }, Some(ConfirmButton::Yes)) => {
+            vec![Command::StartCopy { src, dst }]
+        }
+        (ConfirmKind::StartMove { src, dst }, Some(ConfirmButton::Yes)) => {
+            vec![Command::StartMove { src, dst }]
+        }
+        (ConfirmKind::Conflict { worker }, Some(b)) => {
+            let policy = match b {
+                ConfirmButton::Yes => P::Yes,
+                ConfirmButton::No => P::No,
+                ConfirmButton::YesAll => P::YesAll,
+                ConfirmButton::NoAll => P::NoAll,
+                ConfirmButton::Cancel | ConfirmButton::Ok => P::Cancel,
+            };
+            vec![Command::ResolveConflict(worker, policy)]
+        }
+        (ConfirmKind::QuitWithWorkers, Some(ConfirmButton::Yes)) => {
+            state.should_quit = true;
+            vec![Command::Quit]
+        }
+        // No / Cancel / no button focused: just close.
+        _ => Vec::new(),
+    }
+}
+
 /// `cd` to `dir`, asking the `DirScanned` handler to place the cursor on
 /// the entry named `focus` once the scan completes. Used when navigating up
 /// so the user lands on the directory they just left.
@@ -589,6 +647,64 @@ mod tests {
     fn unknown_key_does_not_panic() {
         let s = st();
         let (_, cmds) = update(s, key(KeyCode::F(11)));
+        assert!(cmds.is_empty());
+    }
+
+    #[test]
+    fn confirm_modal_tab_cycles_focus() {
+        use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind, Modal};
+        let mut s = st();
+        s.modal = Some(Modal::Confirm(ConfirmDialog {
+            title: "x".into(),
+            body: "y".into(),
+            buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
+            focused: 0,
+            kind: ConfirmKind::Delete { paths: vec!["/x".into()] },
+        }));
+        let (s, _) = update(s, key(KeyCode::Tab));
+        match s.modal {
+            Some(Modal::Confirm(ref d)) => assert_eq!(d.focused, 1),
+            _ => panic!(),
+        }
+        let (s, _) = update(s, key(KeyCode::Tab));
+        match s.modal {
+            Some(Modal::Confirm(ref d)) => assert_eq!(d.focused, 0),
+            _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn confirm_modal_enter_on_yes_emits_start_delete() {
+        use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind, Modal};
+        let mut s = st();
+        s.modal = Some(Modal::Confirm(ConfirmDialog {
+            title: "Delete?".into(),
+            body: "1 file".into(),
+            buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
+            focused: 0,
+            kind: ConfirmKind::Delete { paths: vec!["/x/y.txt".into()] },
+        }));
+        let (s, cmds) = update(s, key(KeyCode::Enter));
+        assert!(s.modal.is_none());
+        assert_eq!(
+            cmds,
+            vec![Command::StartDelete { paths: vec!["/x/y.txt".into()] }],
+        );
+    }
+
+    #[test]
+    fn confirm_modal_enter_on_no_just_closes() {
+        use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind, Modal};
+        let mut s = st();
+        s.modal = Some(Modal::Confirm(ConfirmDialog {
+            title: "Delete?".into(),
+            body: "1 file".into(),
+            buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
+            focused: 1,
+            kind: ConfirmKind::Delete { paths: vec!["/x/y.txt".into()] },
+        }));
+        let (s, cmds) = update(s, key(KeyCode::Enter));
+        assert!(s.modal.is_none());
         assert!(cmds.is_empty());
     }
 
