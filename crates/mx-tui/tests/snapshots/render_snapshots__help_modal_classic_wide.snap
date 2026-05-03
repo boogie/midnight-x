@@ -3,9 +3,6 @@ source: crates/mx-tui/tests/render_snapshots.rs
 expression: buffer_snapshot(&buf)
 ---
 ╔════════════════════                                                         ═════════════════════╗
-║                                                                                                  ║
-║                                                                                                  ║
-║                                                                                                  ║
 ║                        ╭──────────────────── Help ─────────────────────╮                         ║
 ║                        │                                               │                         ║
 ║                        │  Navigation                                   │                         ║
@@ -15,10 +12,10 @@ expression: buffer_snapshot(&buf)
 ║                        │    Page down              pgdn                │                         ║
 ║                        │    Top                    home                │                         ║
 ║                        │    Bottom                 end                 │                         ║
-║(empty)                 │    Enter directory        enter               │                         ║
+║                        │    Enter directory        enter               │                         ║
 ║                        │    Parent directory       backspace           │                         ║
 ║                        │    Other panel            tab                 │                         ║
-║                        │    Swap panels            ctrl-u              │                         ║
+║(empty)                 │    Swap panels            ctrl-u              │                         ║
 ║                        │                                               │                         ║
 ║                        │  Selection                                    │                         ║
 ║                        │    Toggle select          insert              │                         ║
@@ -26,11 +23,14 @@ expression: buffer_snapshot(&buf)
 ║                        │    Invert selection       *                   │                         ║
 ║                        │                                               │                         ║
 ║                        │  View                                         │                         ║
+║                        │    View file              f3, esc 3           │                         ║
+║                        │    Toggle hidden          ctrl-h              │                         ║
+║                        │    Cycle sort mode        ctrl-s              │                         ║
 ║                        │                                               │                         ║
-║                        ╰───────────────────────────────────────────────╯                         ║
-║                                                                                                  ║
-╚═════════════════════                                                       ══════════════════════╝
- 0 files, 0 dirs, 0                                                                                 
+║                        │  File ops                                     │                         ║
+║                        │    Copy                   f5, esc 5           │                         ║
+╚═════════════════════   │                                               │   ══════════════════════╝
+ 0 files, 0 dirs, 0      ╰───────────────────────────────────────────────╯                          
  F1 Help  F3 View  F5                                                                               
 ---
 (0,0) Style { fg: Some(Rgb(255, 255, 85)), bg: Some(Rgb(0, 0, 170)), add_modifier: BOLD, sub_modifier: NONE }
@@ -179,12 +179,12 @@ expression: buffer_snapshot(&buf)
 (43,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
 (44,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
 (45,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
-(46,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
-(47,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
-(48,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
-(49,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
-(50,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
-(51,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
+(46,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
+(47,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
+(48,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
+(49,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
+(50,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
+(51,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
 (52,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
 (53,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
 (54,1) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
@@ -479,12 +479,12 @@ expression: buffer_snapshot(&buf)
 (43,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
 (44,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
 (45,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
-(46,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
-(47,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
-(48,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
-(49,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
-(50,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
-(51,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: BOLD, sub_modifier: NONE }
+(46,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
+(47,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
+(48,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
+(49,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
+(50,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
+(51,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
 (52,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
 (53,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
 (54,4) Style { fg: Some(Rgb(0, 0, 0)), bg: Some(Rgb(192, 192, 192)), add_modifier: NONE, sub_modifier: NONE }
