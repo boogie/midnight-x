@@ -109,9 +109,12 @@ Phase 2 will add `crates/mx-fs/` and `crates/mx-preview/` and flesh out `view.rs
 
 ```toml
 [toolchain]
-channel  = "1.85"
+channel    = "stable"
 components = ["rustfmt", "clippy"]
+profile    = "minimal"
 ```
+
+(MSRV `1.85` is enforced by `rust-version` in the workspace manifest; the toolchain itself tracks current stable so we don't download an extra older channel.)
 
 - [ ] **Step 2: Write `rustfmt.toml`**
 
