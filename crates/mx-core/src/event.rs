@@ -65,6 +65,11 @@ pub enum Event {
         path: camino::Utf8PathBuf,
         error: FsError,
     },
+    OpFailed {
+        title: String,
+        path: camino::Utf8PathBuf,
+        error: FsError,
+    },
 }
 
 #[cfg(test)]

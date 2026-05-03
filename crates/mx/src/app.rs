@@ -65,13 +65,32 @@ pub fn run(config: Config) -> Result<()> {
                 Command::Quit => break 'main,
                 Command::RescanDir(side) => schedule_rescan(&mut executor, &state, side),
                 Command::OpenViewer(path) => run_preview(&previewer, &tx, path),
+                Command::Mkdir { parent, name } => {
+                    let target = parent.join(&name);
+                    if let Err(e) = mx_fs::ops::mkdir(&parent, &name) {
+                        let _ = tx.send(Event::OpFailed {
+                            title: "Make directory failed".into(),
+                            path: target,
+                            error: e,
+                        });
+                    }
+                    schedule_rescan(&mut executor, &state, state.focus);
+                }
+                Command::Rename { from, to } => {
+                    if let Err(e) = mx_fs::ops::rename(&from, &to) {
+                        let _ = tx.send(Event::OpFailed {
+                            title: "Rename failed".into(),
+                            path: from,
+                            error: e,
+                        });
+                    }
+                    schedule_rescan(&mut executor, &state, state.focus);
+                }
                 Command::StartCopy { .. }
                 | Command::StartMove { .. }
                 | Command::StartDelete { .. }
-                | Command::Mkdir { .. }
-                | Command::Rename { .. }
                 | Command::CancelWorker(_)
-                | Command::ResolveConflict(_, _) => { /* Phase 3 */ }
+                | Command::ResolveConflict(_, _) => { /* later Phase 3 tasks */ }
             }
         }
 

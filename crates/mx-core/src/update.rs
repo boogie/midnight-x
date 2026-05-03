@@ -71,6 +71,14 @@ pub fn update(mut state: State, event: Event) -> (State, Vec<Command>) {
                 }
             }
         }
+        Event::OpFailed { title, path, error } => {
+            use crate::state::{ErrorDialog, Modal};
+            state.modal = Some(Modal::Error(ErrorDialog {
+                title,
+                body: format!("{path}: {error}"),
+                details: Vec::new(),
+            }));
+        }
     }
 
     (state, cmds)
@@ -462,13 +470,44 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             return vec![Command::OpenViewer(path)];
         }
 
+        CommandId::Mkdir => {
+            use crate::state::{InputDialog, InputKind, Modal};
+            let parent = state.focused().cwd.clone();
+            state.modal = Some(Modal::Input(InputDialog {
+                title: "Make directory".into(),
+                prompt: "Enter the new directory name:".into(),
+                value: String::new(),
+                cursor: 0,
+                kind: InputKind::Mkdir { parent },
+            }));
+        }
+        CommandId::Rename => {
+            use crate::state::{InputDialog, InputKind, Modal};
+            let panel = state.focused();
+            if panel.entries.is_empty() {
+                return Vec::new();
+            }
+            let entry = &panel.entries[panel.cursor];
+            if entry.name == ".." {
+                return Vec::new();
+            }
+            let from = panel.cwd.join(&entry.name);
+            let value = entry.name.clone();
+            let cursor = value.len();
+            state.modal = Some(Modal::Input(InputDialog {
+                title: "Rename".into(),
+                prompt: format!("New name for {}:", entry.name),
+                value,
+                cursor,
+                kind: InputKind::Rename { from },
+            }));
+        }
+
         // Phase 3 work below.
         CommandId::Copy
         | CommandId::Move
-        | CommandId::Delete
-        | CommandId::Mkdir
-        | CommandId::Rename => {
-            // Phase 3.
+        | CommandId::Delete => {
+            // Phase 3 follow-on tasks.
         }
     }
     Vec::new()
