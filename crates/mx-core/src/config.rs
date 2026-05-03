@@ -14,6 +14,7 @@ use crate::theme::Theme;
 pub enum TruncatePath { Start, Middle, End }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct UiConfig {
     pub theme:         String,
     pub show_hidden:   bool,
@@ -37,12 +38,14 @@ impl Default for UiConfig {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct UiColumns { pub size: bool, pub modified: bool }
 impl Default for UiColumns {
     fn default() -> Self { Self { size: true, modified: true } }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct InputConfig {
     pub chord_timeout_ms: u64,
     pub double_click_ms:  u64,
@@ -56,6 +59,7 @@ impl InputConfig {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct OpsConfig {
     pub copy_buffer_kib:        u64,
     pub preserve_mtime:         bool,
@@ -80,6 +84,7 @@ impl Default for OpsConfig {
 pub enum LogLevel { Off, Error, Warn, Info, Debug, Trace }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct LoggingConfig {
     pub level: LogLevel,
     pub file:  String,        // "auto", "off", or absolute path
