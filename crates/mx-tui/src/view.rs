@@ -92,14 +92,14 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
     {
         let mut header = String::new();
         header.push(' '); // gutter
-        header.push_str(&render_name("Name", name_w));
+        header.push_str(&render_center("Name", name_w));
         if show_size {
             header.push(' '); // separator (drawn by overlay below)
-            header.push_str(&render_right("Size", size_w));
+            header.push_str(&render_center("Size", size_w));
         }
         if show_mtime {
             header.push(' ');
-            header.push_str(&render_right("Modified", mtime_w));
+            header.push_str(&render_center("Modified", mtime_w));
         }
         let p = Paragraph::new(header).style(border_style);
         let row_area = Rect {
@@ -219,18 +219,23 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
     }
 }
 
-fn render_right(text: &str, width: usize) -> String {
+fn render_center(text: &str, width: usize) -> String {
     let chars: Vec<char> = text.chars().collect();
     if chars.len() >= width {
-        chars.into_iter().take(width).collect()
-    } else {
-        let mut s = String::with_capacity(width);
-        for _ in 0..(width - chars.len()) {
-            s.push(' ');
-        }
-        s.push_str(text);
-        s
+        return chars.into_iter().take(width).collect();
     }
+    let pad = width - chars.len();
+    let left = pad / 2;
+    let right = pad - left;
+    let mut s = String::with_capacity(width);
+    for _ in 0..left {
+        s.push(' ');
+    }
+    s.push_str(text);
+    for _ in 0..right {
+        s.push(' ');
+    }
+    s
 }
 
 fn render_name(name: &str, width: usize) -> String {
