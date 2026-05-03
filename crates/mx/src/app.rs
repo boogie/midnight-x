@@ -70,7 +70,8 @@ pub fn run(config: Config) -> Result<()> {
                 | Command::StartDelete { .. }
                 | Command::Mkdir { .. }
                 | Command::Rename { .. }
-                | Command::CancelWorker(_) => { /* Phase 3 */ }
+                | Command::CancelWorker(_)
+                | Command::ResolveConflict(_, _) => { /* Phase 3 */ }
             }
         }
 

@@ -197,17 +197,46 @@ pub struct ViewerDialog {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConfirmDialog {
-    pub title: String,
-    pub body: String,
-    pub default_yes: bool,
+    pub title:   String,
+    pub body:    String,
+    pub buttons: Vec<ConfirmButton>,
+    pub focused: usize,
+    pub kind:    ConfirmKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConfirmButton {
+    Yes,
+    No,
+    YesAll,
+    NoAll,
+    Cancel,
+    Ok,
+}
+
+/// What the calling code wants to do with the confirm result.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ConfirmKind {
+    Delete { paths: Vec<Utf8PathBuf> },
+    StartCopy { src: Vec<Utf8PathBuf>, dst: Utf8PathBuf },
+    StartMove { src: Vec<Utf8PathBuf>, dst: Utf8PathBuf },
+    Conflict { worker: crate::event::WorkerId },
+    QuitWithWorkers,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InputDialog {
-    pub title: String,
+    pub title:  String,
     pub prompt: String,
-    pub value: String,
+    pub value:  String,
     pub cursor: usize,
+    pub kind:   InputKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum InputKind {
+    Mkdir { parent: Utf8PathBuf },
+    Rename { from: Utf8PathBuf },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

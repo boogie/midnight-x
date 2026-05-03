@@ -1,0 +1,380 @@
+
+Wayback Machine
+http://www.egner-online.de/vc/en/commander.shtml
+15 captures
+3 Jun 2002 - 7 Mar 2021
+Jun	Aug	Oct
+05	
+2001	2002	2003
+  
+ About this capture
+
+news concerning the Volkov Commander
+get the hottest news via e-mail
+
+common information
+version 4.01 (shareware)
+pre-release of VC 5
+register your shareware version
+
+download area
+links to related stuff
+
+information about the authors (program + homepage)
+what do you think about us? / sign the guestbook / awards
+
+
+ About the Commander
+down What is the Volkov Commander?
+down Who would need the VC?
+down Peculiarities
+down The current Version
+down Hints for Installation
+goto Updating to german Online Help
+
+ 
+
+What is the Volkov Commander? 
+Volkov Commander (VC) is a great clone of the well-known Norton Commander by Symantec. It's a DOS based file manager, which in the eightees set the standard. This standard is still valid for most file managers after so many years. VC is no 100% exact clone of this tool, but it uses most of the features lots of users have made friends with. Its visual appearance and controls are nearly the same, but have been enhanced and improved in a number of ways.
+
+to the top to the top
+
+ 
+
+
+
+ 
+
+Who would need the Volkov Commander? 
+Working with a computer makes one fact very clear: Many actions concern copying, moving, renaming, creating and deleting of files and / or subdirectories. Usually a file manager is used for such work. Only some hardboiled hackers ;-) get a kick out of typing such cryptical commands like COPY, DEL with lots of difficult to remember parameters. (Such commands are great tools for batch files, of course.)
+
+Most of us just want to work in a quick and effective manner, that's why we use a computer, isn't it? That could be one of the reasons for the great success of Norton Commander and all the file managers, that mimic (more or less) its look-and-feel. The Volkov Commander makes no exception!
+
+It has two file list panels, a menu bar with function keys and a simple to understand user guiding interface. Just have a look:
+
+screen shot
+
+Though Windows Explorer has several optical gimmicks (like documents, flying from one folder to another while copy is at work), it is really awkward and slow.
+
+Here is an example. To copy some files from one directory to another, you have to manage a lot of steps:
+
+mouse	
+Select source directory by mouseclick
+Select desired File(s) with left mouseclick. Scattered Files you have to select by holding down Ctrl, coherent file-areas by holding down Shift. You have to pay attention not to release that key, or your toilsome created selection is neutralized. %@#$§* (Sorry!) Then the whole mess starts all over again.
+Right-click to bring up the context menu
+Choose Copy or Cut with the mouse
+Navigate to the target directory. You have to lose source directory from your eyes focus for that or you have to open a second explorer session! If you have to make extensive file operations, it can be a pain in your neck to go through all these steps each time.
+Click and select the target directory
+Right-click to bring up the context menu once more
+Click the Paste entry on the menu
+ 
+
+Using Volkov Commander makes it easy. You allways see both file panels, source and target. All you have to do is pick the source and the target directories, select the files (if necessary by using flexible wildcards like *.bak or *.doc) and... just copy them by clicking on F5 . That's it! And the best of all: You never lose sight of your files.
+
+But there is still more: What do you do, if you get some archive-files (*.zip, *.rar, *.arj,...), that are frequently used for download files to shrink transfer time and web-space? Windows Explorer cannot handle them! You have to bother with some external DOS application like PKZIP or ARJ for that job. Once more you are confrontated with those disgusting parameters. Okay, there are some add-ons for the explorer, like the great WinZip! But most of all you have to learn the controls of one more program, that often gulps down lots of megabytes of your harddisk.
+
+Okay, here I have to mention, that the Volkov Commander 4.0x does not directly support archives. But already the actual beta version of soon-to-come VC 5 has an internal handling of archives implemented. They behave just like common directories.
+
+to the top to the top
+
+ 
+
+
+
+ 
+
+Peculiarities 
+When working in DOS, the Volkov Commander is the ideal manager for your files and directories. It can be used in a DOS box as well as in a Windows95/98 session. It also runs under Windows NT or OS/2. Programmed completely in assembler, it is very fast and doesn't take up much memory. Furthermore it can be customized in several ways.
+
+It can be controlled by mouse as well as by keyboard commands. Try that with the Windows Explorer and you will despair.
+
+We are used to have applications, that (although with only a small number of features) take up so much space, that they only can be distributed on cd-rom. VC is very compact, you can put the whole program on a single 3,5"-diskette with ease! So you can take it with you, wherever you want.
+
+You can start it directly from a diskette without installing it. So it is a nice tool, if you have to work on a computer, where you have no access to another file manager. That can happen, for instance, if Windows has crashed and cannot be started again. Just start VC from disk and have a look at win.ini, system.ini, edit some spoiled entries, delete some virus-infected file,... You will find lots more of usabilities.
+
+Though you'd primarily use the commander for file managing, it has more features, that perhaps attract your attention only "on the second look". You can create user defined menus, put some special parameters in it and you'll have some very flexible tools for your daily file management. A collection of examples is part of the package that you can download from the download area of this homepage.
+
+to the top to the top
+
+ 
+
+
+
+ 
+
+The current Version? 
+In the moment the Volkov Commander is released in two versions:
+
+Name
+
+Release
+
+Description
+
+VC 4	4.05	shareware version
+VC 5	4.99.08	beta version, successor of VC 4
+ 
+
+Here are some comments to these versions:
+
+4Version 4.05 is the last fully functionable release of the Volkov Commander. It is a pure DOS application, so it doesn't support special features of Windows 9x, like long filenames. (Apart from that, it can be used under Windows 9x, of course!) Besides the russian version there is an english one, that western europeans should prefer, I think. According to an agreement with the author, I have translated the context-orientated online-help into german. So you are confrontated with english terms, but you can always get a german explanation to every feature. Want to get more? Here you can get additional information about the shareware version 4.
+
+If you already have VC 4, but don't have german help (why should a non-german user need it??), here's a way to integrate it later. Updating to german online help.
+
+Version 4 is shareware and can be tested free for 30 days. After this evaluation period you have to register and pay. Otherwise you have to stop using it furthermore. More information (prices, registration) can be found in the new browser window licence agreement (register.txt), that is part of the package and can be downloaded here.
+
+ 
+
+5Vsevolod Volkov is currently working on the new version 5 of his commander (VC 5). It is still in a phase of development. This upgrade works in a Windows 9x / Windows NT or OS/2-environment. VC 5 supports long filenames as well as archives (*.zip, *.arc, *.rar,...), that are handled just like directories. Here you can get some  impressions and features of the beta version. When updated last time, actual beta release was version 4.99.08 alpha. If you want to test it, you can download it from the download area. Most of the features of the final release are already available.
+
+It is planned, that I will translate the whole program (dialogs, menus, messages and documentation) into german, after final release of VC 5 is published. In the moment this would not make much sense.
+
+to the top to the top
+
+ 
+
+
+
+ 
+
+Hints for Installation 
+Both versions of VC have in common: Unpack the downloaded archive files into an empty directory.
+
+With Version 4.0x you'll get a little program called vcsetup.com, that is used to configure some of the parameters of the commander. Most of them can also be changed directly in VC itself. Of course, those settings can be saved for further sessions.
+
+Beta version (4.99.xx) does not have such a configuration tool. I don't know, whether there will come up one in later releases, nor do I know, whether there will be needed such config-tool.
+
+Just call vc.com to start and run the commander. Under Windows you can create a link to it using a special icon. Some of those little pictures are put together in a small collection. Here you can see some of them:
+
+Icon	Icon	Icon	Icon
+ 
+
+These and more can be downloaded from the download area to be used with your version of Volkov Commander.
+
+More hints for optimal usage of Volkov Commander you can take from the file vcinfo.txt, that will be created too by unpacking the download file.
+
+to the top to the top
+
+ 
+
+http://www.egner-online.de/vc/en/commander.shtml>
+
+
+Last Update: 2002-07-21
+© Daniel R. Egner, all rights reserved
+Comments or suggestions? E-Mail e-mail webmaster@egner-online.de
+[Deutsche Version dieses Dokuments deutsch]
+
+ 
+Wayback Machine
+http://www.egner-online.de/vc/en/vc4.shtml
+17 captures
+12 Jun 2002 - 19 Jul 2007
+Jun	AUG	Oct
+05	
+2001	2002	2003
+  
+ About this capture
+
+news concerning the Volkov Commander
+get the hottest news via e-mail
+
+common information
+version 4.01 (shareware)
+pre-release of VC 5
+register your shareware version
+
+download area
+links to related stuff
+
+information about the authors (program + homepage)
+what do you think about us? / sign the guestbook / awards
+
+
+ VC 4 (Shareware-Version)
+4
+
+screen shotVersion 4 of the Volkov Commander is a complete file manager with lots of features, although it does not support the long filenames of Windows 9x/NT. However, it has very many advantages compared with many other such tools. Also, it's easier to manage files and directories with VC 4 than editing long DOS commands with plenty of difficult-to-remember parameters.
+
+Here you can find some of the features of VC 4:
+
+    It's compact. Thanks to its assembler code, it uses only very little memory. It fits completely on a single 3,5" disk.
+    It can be used with two different memory modes: Small makes use of memory swapping when external commands are carried out and takes about 12,5 kb of RAM, normal mode uses 76 kb RAM.
+    All commands can also be applied on subdirectories.
+    Files and/or directories can be copied, moved, renamed or deleted. Attributes (incl. date and time) can be changed.
+screen shot
+
+    Files can be split to several diskettes. Of course they can be merged again!
+    Directories can be displayed in a tree structure, which also can be used to navigate.
+    Files can be first chosen via group selection, for example: *.txt or *.bak. Then you can manage those selected files very quickly and easily.
+    The File Find function can search the entire disk, including subdirectories.
+    Volume labels can be edited.
+    User defined menus can execute a series of commands. This corresponds closely to common batch files. Of course, such menu files are nearly the same, but the author has extended their functionability with some special macro parameters. Commands can be linked to a hotkey of your choice.
+
+For example, you can create a file list containing all selected files in the active panel. This file list becomes the input-parameter for the tool PKZIP, telling it which files to zip.
+
+These menus can be defined locally (working only with a certain directory) as well as globally, which means, they work with all directories!
+    Integrated editor and viever work both in text and hexadecimal mode. Thanks to simple configuration files nearly every DOS based external viewer / editor is supported. Some shareware viewers can be found here in the download area.
+    File extensions can be linked to several actions in a very flexible way. For example you can define, that clicking a file ending with *.txt first starts the DOS editor edit.com and then automatically opens the text file.
+screen shot
+
+Another use of this feature could be: Files with the extension *.zip get linked with the tool PKUNZIP. Double-clicking a file named test.zip (for example) would automatically unpack it into the active directory.
+
+The format of this definition file is very simple (have a look at the screenshot above). Editing such an extension file is documented online in a context sensitive help file. (German users of VC 4 can get their own german help for this feature too, of course!)
+
+    VC 4 can be customized in a very extensive way. Colors, several confirmation options (file deletion, program termination,...), panel display, screen saver behaviour and much more. Here's an example of an option dialog with its clear structured interface:
+screen shot
+
+    Directory Info: For each directory you can have a small editable file called dirinfo, that contains a short description of the directory. Whenever a directory is entered the content of the relevant description file is shown in the info-panel.
+    Memory Info: Shows present memory allocation with the possibility to free up RAM occupied by TSR (terminate and stay resident) programs.
+    Dirsize: Shows how much harddisk space directories take up.
+to the top to the top
+
+Here you find some more screen shots to get an impression of its look-and-feel. VC 4 has an intuitive, clear structured user interface, that correspondends to the quasi-standard, Norton Commander has set in the eightees.
+screen shot
+
+ 
+
+German-speaking users optionally can get a translated online help. Have a look at the download area or follow the next link to learn more about updating to german online help. It makes it a little easier to work with the VC 4. The following screen shot shows the original english online help.
+
+screen shot
+
+ 
+
+To read about the updates and changes, click new browser window here and have a look at the document history-vc4.txt.
+
+to the top to the top
+
+ 
+
+ 
+
+http://www.egner-online.de/vc/en/vc4.shtml>
+
+
+Last Update: 2002-07-21
+© Daniel R. Egner, all rights reserved
+Comments or suggestions? E-Mail e-mail webmaster@egner-online.de
+[Deutsche Version dieses Dokuments deutsch]
+
+ 
+
+
+Wayback Machine
+http://www.egner-online.de/vc/en/vc5.shtml
+23 captures
+12 Jun 2002 - 25 Mar 2025
+Jun	AUG	Oct
+05	
+2001	2002	2003
+  
+ About this capture
+
+news concerning the Volkov Commander
+get the hottest news via e-mail
+
+common information
+version 4.01 (shareware)
+pre-release of VC 5
+register your shareware version
+
+download area
+links to related stuff
+
+information about the authors (program + homepage)
+what do you think about us? / sign the guestbook / awards
+
+
+ VC 5 (Beta-Version 4.99.xx)
+5
+
+Page 1/3
+down Already existing Features
+down Missing Features
+down Known Problems
+goto Look & Feel of the new Commander
+goto History and Changes
+
+ 
+
+Already existing features 
+screen shotThough it is a pure DOS application, the new commander supports some of the special features of Windows 95/98/NT. Suggestions from users have been taken into consideration by the author, too. Here are some of the features, you can already find in this state of development:
+
+    Associations in *.ext files using file masks as well as extensions:
+A*.txt: edit !.!
+    Associations of extensions and file masks with menus:
+zip: zip.mnu
+    Symbol '*' can be used in the middle of a mask and groups of masks can be used instead of a single mask in group operations and select functions (Shift-F5, Shift-F6, Shift-F8, Grey+/-/*):
+vc*.*;*a*.txt
+    Descriptions
+VC 5 supports description files like descript.ion or files.bbs. It can show and optionally copy them.
+    Long filenames
+VC 5 supports long filenames on computers running Windows 9x.
+    Archives
+One of the most interesting feature may be the way, VC 5 handles archives (*.zip, *.rar, *.arj,...) They behave like normal directories! You can look, edit, copy or delete files or directories inside those archives. Nearly every archive type can be supported by VC 5. You only have to edit a special text file, that contains the concerning parameters used by the archivers. Most popular archivers are pre-configured, of course.
+
+VC 5 supports long filenames in archives, too.
+    SVGA Mode
+VC 5 works in every text mode with 80 * 25 characters and above. With Ctrl-F9 you can switch between supported modes (only limited by your graphics card).
+    
+EMS, XMS and disk-swapping
+VC 5 optionally can use EMS, XMS memory or disk space to reduce memory demands of resident part of VC when executing programs. Run vc/? to view switches.
+
+    Reversed sort order
+Files can be sorted in ascending or descending order.
+    New filters
+New filter settings can be defined to show only a selection of files (for example only databases or batch files)
+    Tree info
+VC 5 supports a new tree info format. The Norton Commander compatible treeinfo.ncd is not supported any longer, because long filenames of Windows 9x had to be taken into consideration. The old format could not do that job. New treeinfo.vcd can be placed either in the root or in VC-home directory to have a very quick access to the directory structure of the scanned drive. VC 5 updates it each time, a directory is created, renamed, copied or deleted.
+    Attributes of directories
+All attributes of directories can be changed from within the Tree panel, including date and time.
+    New macros
+New macros for inactive panel in vc.mnu and *.ext files, for example: %, %.%, %\, %@. New macros for short names and new macros for entering strings ![text], !0,..., !9.
+    Unicodes
+Internal viewer supports translation tables with single-byte and double-byte character set (Unicode). These tables can be found in files with the extension *.tbl. Copy tables into the directory of VC and use F8 to select one of them in the internal viewer.
+to the top to the top
+
+ 
+
+
+
+ 
+
+Missing features 
+Because Volkov Commander 5 is still under development, the beta version does not offer all features of the coming final release. The following features are still missing:
+
+    Internal editor
+    Edititing of user defined menus and extension files
+    Memory Information
+    No full support for dirinfo (show information: yes / edit information: no)
+    Screen Saver Menu - No configuration, but screen saver is already working
+
+to the top to the top
+
+ 
+
+
+
+ 
+
+Known Problems 
+Apart from missing features during development a program often has to fight with strange phenomenons, persistent bugs and much more, that has to be cleared up. For the final release, the following problems should be eliminated:
+
+    No support for long filenames under OS/2
+    No support for long filenames under Windows NT
+    Extended video modes don't work correctly under Windows NT.
+to the top to the top
+
+goto Have a look at the new Commander
+
+ 
+
+http://www.egner-online.de/vc/en/vc5.shtml>
+
+
+Last Update: 2002-07-21
+© Daniel R. Egner, all rights reserved
+Comments or suggestions? E-Mail e-mail webmaster@egner-online.de
+[Deutsche Version dieses Dokuments deutsch]
+
+ 

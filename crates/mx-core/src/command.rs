@@ -74,8 +74,23 @@ pub enum Command {
         to: Utf8PathBuf,
     },
     CancelWorker(WorkerId),
+    ResolveConflict(WorkerId, OverwritePolicy),
     OpenViewer(Utf8PathBuf),
     Quit,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OverwritePolicy {
+    /// Overwrite this one file.
+    Yes,
+    /// Skip this file.
+    No,
+    /// Overwrite this and every subsequent conflict.
+    YesAll,
+    /// Skip this and every subsequent conflict.
+    NoAll,
+    /// Cancel the whole operation.
+    Cancel,
 }
 
 #[cfg(test)]
