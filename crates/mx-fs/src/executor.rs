@@ -132,6 +132,43 @@ impl Executor {
         id
     }
 
+    /// Spawn a recursive copy worker.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the OS refuses to spawn a thread.
+    pub fn start_copy(&mut self, src: Vec<Utf8PathBuf>, dst: Utf8PathBuf) -> WorkerId {
+        let id = self.alloc_id();
+        let tx_main = self.tx.clone();
+        let cancel = Arc::new(AtomicBool::new(false));
+        let cancel_for_thread = Arc::clone(&cancel);
+        let (resume_tx, resume_rx) = std::sync::mpsc::channel::<OverwritePolicy>();
+        let join = thread::Builder::new()
+            .name(format!("mx-fs-copy-{}", id.0))
+            .spawn(move || {
+                run_copy_worker(id, src, dst, tx_main, cancel_for_thread, resume_rx);
+            })
+            .expect("worker thread cannot fail to spawn");
+        self.workers.insert(
+            id,
+            WorkerHandle {
+                join,
+                cancel,
+                resume: Some(resume_tx),
+            },
+        );
+        id
+    }
+
+    /// Resolve a conflict that a copy/move worker is waiting on.
+    pub fn resolve_conflict(&self, id: WorkerId, policy: OverwritePolicy) {
+        if let Some(w) = self.workers.get(&id) {
+            if let Some(ref tx) = w.resume {
+                let _ = tx.send(policy);
+            }
+        }
+    }
+
     /// Cancel a running worker.
     pub fn cancel(&self, id: WorkerId) {
         if let Some(w) = self.workers.get(&id) {
@@ -156,6 +193,104 @@ impl Executor {
     #[must_use]
     pub fn active_count(&self) -> usize {
         self.workers.len()
+    }
+}
+
+#[allow(clippy::needless_pass_by_value)] // values are owned by the spawned thread
+fn run_copy_worker(
+    id: WorkerId,
+    src_list: Vec<Utf8PathBuf>,
+    dst_dir: Utf8PathBuf,
+    tx_main: Sender<Event>,
+    cancel: Arc<AtomicBool>,
+    resume_rx: std::sync::mpsc::Receiver<OverwritePolicy>,
+) {
+    use std::sync::Mutex;
+    let policy_state: Arc<Mutex<Option<OverwritePolicy>>> = Arc::new(Mutex::new(None));
+
+    let progress = {
+        let tx = tx_main.clone();
+        move |path: &camino::Utf8Path, done: u64, total: u64| {
+            let _ = tx.send(Event::Worker(
+                id,
+                WorkerMsg::Progress {
+                    bytes_done: done,
+                    bytes_total: total,
+                    current_path: path.to_path_buf(),
+                },
+            ));
+        }
+    };
+
+    let resume_rx = std::sync::Mutex::new(resume_rx);
+    let handler = {
+        let tx = tx_main.clone();
+        let policy_state = Arc::clone(&policy_state);
+        move |src: &camino::Utf8Path,
+              dst: &camino::Utf8Path|
+              -> crate::copy::OverwriteAction {
+            if let Some(p) = *policy_state.lock().expect("policy_state poisoned") {
+                return policy_to_action(p);
+            }
+            let _ = tx.send(Event::Worker(
+                id,
+                WorkerMsg::Conflict {
+                    src: src.to_path_buf(),
+                    dst: dst.to_path_buf(),
+                    kind: detect_conflict_kind(src, dst),
+                },
+            ));
+            let rx = resume_rx.lock().expect("resume_rx poisoned");
+            let decision = rx.recv().unwrap_or(OverwritePolicy::Cancel);
+            if matches!(
+                decision,
+                OverwritePolicy::YesAll | OverwritePolicy::NoAll | OverwritePolicy::Cancel
+            ) {
+                *policy_state.lock().expect("policy_state poisoned") = Some(decision);
+            }
+            policy_to_action(decision)
+        }
+    };
+
+    let mut all_errors = Vec::new();
+    for src in &src_list {
+        if cancel.load(Ordering::Relaxed) {
+            break;
+        }
+        let dst = dst_dir.join(src.file_name().unwrap_or(""));
+        let report = crate::copy::copy_tree(src, &dst, &cancel, &progress, &handler);
+        all_errors.extend(report.errors);
+    }
+    let msg = if all_errors.is_empty() {
+        WorkerMsg::Done
+    } else {
+        WorkerMsg::Failed { errors: all_errors }
+    };
+    let _ = tx_main.send(Event::Worker(id, msg));
+}
+
+fn policy_to_action(p: OverwritePolicy) -> crate::copy::OverwriteAction {
+    match p {
+        OverwritePolicy::Yes | OverwritePolicy::YesAll => crate::copy::OverwriteAction::Overwrite,
+        OverwritePolicy::No | OverwritePolicy::NoAll => crate::copy::OverwriteAction::Skip,
+        OverwritePolicy::Cancel => crate::copy::OverwriteAction::Cancel,
+    }
+}
+
+fn detect_conflict_kind(
+    src: &camino::Utf8Path,
+    dst: &camino::Utf8Path,
+) -> mx_core::event::ConflictKind {
+    use mx_core::event::ConflictKind;
+    let s = std::fs::metadata(src).ok();
+    let d = std::fs::metadata(dst).ok();
+    let s_dir = s.as_ref().is_some_and(std::fs::Metadata::is_dir);
+    let d_dir = d.as_ref().is_some_and(std::fs::Metadata::is_dir);
+    match (s_dir, d_dir) {
+        (false, false) => ConflictKind::FileOverFile,
+        (false, true) => ConflictKind::FileOverDir,
+        (true, false) => ConflictKind::DirOverFile,
+        (true, true) => ConflictKind::DirOverDir,
     }
 }
 
@@ -258,6 +393,21 @@ mod tests {
         ex.join_all();
         assert!(!t.path().join("a").exists());
         assert!(!t.path().join("b").exists());
+    }
+
+    #[test]
+    fn start_copy_succeeds_without_conflict() {
+        let t = tempfile::tempdir().unwrap();
+        std::fs::write(t.path().join("a.txt"), b"hello").unwrap();
+        std::fs::create_dir(t.path().join("dst")).unwrap();
+        let (tx, rx) = mpsc::channel::<Event>();
+        let mut ex = Executor::new(tx);
+        let src = camino::Utf8PathBuf::from_path_buf(t.path().join("a.txt")).unwrap();
+        let dst = camino::Utf8PathBuf::from_path_buf(t.path().join("dst")).unwrap();
+        let _id = ex.start_copy(vec![src], dst);
+        let _ = drain(&rx, |e| matches!(e, Event::Worker(_, WorkerMsg::Done)));
+        ex.join_all();
+        assert_eq!(std::fs::read(t.path().join("dst/a.txt")).unwrap(), b"hello");
     }
 
     #[test]
