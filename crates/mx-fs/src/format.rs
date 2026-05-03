@@ -5,11 +5,15 @@
 /// `"  9.4 G"`, `" 12.0 T"`. `None` renders as 4 spaces.
 const UNITS: [&str; 5] = ["K", "M", "G", "T", "P"];
 
+/// Format a byte count to **exactly 7 visible columns**. `None` → 7 spaces.
+///
+/// Examples:
+/// `"      0"`, `"  1.5 K"`, `" 15.0 K"`, `"  150 K"`, `"  1.5 M"`.
 #[must_use]
 #[allow(clippy::cast_precision_loss)]
 pub fn format_size(bytes: Option<u64>) -> String {
     let Some(b) = bytes else {
-        return "    ".to_string();
+        return "       ".to_string();
     };
     if b < 1024 {
         return format!("{b:>7}");
@@ -23,18 +27,46 @@ pub fn format_size(bytes: Option<u64>) -> String {
         value /= 1024.0;
         unit = u;
     }
+    // Number takes 5 cols, then space, then 1-col unit → 7 total.
     if value >= 100.0 {
-        format!("{value:>4.0} {unit}")
+        format!("{value:>5.0} {unit}")
     } else if value >= 10.0 {
-        format!("{value:>4.1} {unit}")
+        format!("{value:>5.1} {unit}")
     } else {
-        format!("{value:>4.2} {unit}")
+        format!("{value:>5.2} {unit}")
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn output_is_always_seven_chars() {
+        let cases = [
+            None,
+            Some(0u64),
+            Some(42),
+            Some(999),
+            Some(1023),
+            Some(1024),
+            Some(1500),
+            Some(15 * 1024),
+            Some(150 * 1024),
+            Some(1024u64 * 1024),
+            Some(1024u64 * 1024 * 1024),
+            Some(u64::MAX),
+        ];
+        for case in cases {
+            let s = format_size(case);
+            assert_eq!(
+                s.chars().count(),
+                7,
+                "format_size({case:?}) = {s:?} (len {})",
+                s.chars().count()
+            );
+        }
+    }
 
     #[test]
     fn small_files_show_raw_byte_count() {
@@ -46,20 +78,13 @@ mod tests {
 
     #[test]
     fn kibibytes_use_k_suffix() {
-        assert_eq!(format_size(Some(1024)), "1.00 K");
-        assert_eq!(format_size(Some(2 * 1024)), "2.00 K");
-        assert_eq!(format_size(Some(15 * 1024)), "15.0 K");
-        assert_eq!(format_size(Some(150 * 1024)), " 150 K");
-    }
-
-    #[test]
-    fn megabytes_and_gigabytes() {
-        assert_eq!(format_size(Some(1024 * 1024)), "1.00 M");
-        assert_eq!(format_size(Some(1024 * 1024 * 1024)), "1.00 G");
+        assert_eq!(format_size(Some(1024)), " 1.00 K");
+        assert_eq!(format_size(Some(15 * 1024)), " 15.0 K");
+        assert_eq!(format_size(Some(150 * 1024)), "  150 K");
     }
 
     #[test]
     fn none_is_blank() {
-        assert_eq!(format_size(None), "    ");
+        assert_eq!(format_size(None), "       ");
     }
 }

@@ -4,13 +4,13 @@ expression: buffer_snapshot(&buf)
 ---
 ┌ /Users/boogie/proj ──────────────────────────────────────┐
 │ Name                            │   Size│        Modified│
-│ ..                              │    │                   │
-│ src                             │    │                   │
-│ target                          │    │                   │
-│ Cargo.toml                      │1.21 K│                 │
-│•README.md                       │4.22 K│                 │
+│ ..                              │       │                │
+│ src                             │       │                │
+│ target                          │       │                │
+│ Cargo.toml                      │ 1.21 K│                │
+│•README.md                       │ 4.22 K│                │
 │ rust-toolchain.toml             │     80│                │
-│ link-to-src                     │    │                   │
+│ link-to-src                     │       │                │
 │                                                          │
 │                                                          │
 │                                                          │
