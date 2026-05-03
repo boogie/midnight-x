@@ -9,4 +9,5 @@ pub mod errors;
 pub mod event;
 pub mod theme;
 pub mod keymap;
+pub mod config;
 pub mod state;

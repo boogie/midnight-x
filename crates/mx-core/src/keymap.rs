@@ -26,6 +26,16 @@ pub struct Keymap {
     by_seq:   HashMap<Vec<KeyChord>, CommandId>,
 }
 
+impl PartialEq for Keymap {
+    fn eq(&self, other: &Self) -> bool {
+        // Equality compares the canonical binding list only; `by_seq` is a
+        // derived index and stays in sync with `bindings`.
+        self.bindings == other.bindings
+    }
+}
+
+impl Eq for Keymap {}
+
 impl Keymap {
     #[must_use]
     pub fn empty() -> Self { Self::default() }
