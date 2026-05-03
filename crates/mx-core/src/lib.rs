@@ -5,5 +5,6 @@
 
 pub mod input;
 pub mod command;
+pub mod errors;
 pub mod event;
 pub mod state;
