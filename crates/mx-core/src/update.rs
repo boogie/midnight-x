@@ -136,6 +136,12 @@ fn handle_worker_msg(state: &mut State, _id: crate::event::WorkerId, msg: crate:
             let new_entries: std::sync::Arc<[_]> = entries.into();
             panel.entries = new_entries;
             panel.loading = false;
+            // Honor any "land on this entry name" request, e.g. after `..`.
+            if let Some(want) = panel.pending_focus_name.take() {
+                if let Some(idx) = panel.entries.iter().position(|e| e.name == want) {
+                    panel.cursor = idx;
+                }
+            }
             let last = panel.entries.len().saturating_sub(1);
             if panel.cursor > last {
                 panel.cursor = last;
@@ -277,24 +283,36 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             if !entry.is_dir_like() {
                 return Vec::new();
             }
-            let target = if entry.name == ".." {
-                match panel.cwd.parent() {
+            if entry.name == ".." {
+                let parent = match panel.cwd.parent() {
                     Some(p) if !p.as_str().is_empty() => p.to_path_buf(),
                     _ => return Vec::new(),
+                };
+                let focus = panel.cwd.file_name().unwrap_or("").to_string();
+                if focus.is_empty() {
+                    cd_to(state, side, parent);
+                } else {
+                    cd_to_with_focus(state, side, parent, focus);
                 }
             } else {
-                panel.cwd.join(&entry.name)
-            };
-            cd_to(state, side, target);
+                let target = panel.cwd.join(&entry.name);
+                cd_to(state, side, target);
+            }
             return vec![Command::RescanDir(side)];
         }
         CommandId::ParentDir => {
             let side = state.focus;
-            let parent = match state.focused().cwd.parent() {
+            let panel = state.focused();
+            let parent = match panel.cwd.parent() {
                 Some(p) if !p.as_str().is_empty() => p.to_path_buf(),
                 _ => return Vec::new(),
             };
-            cd_to(state, side, parent);
+            let focus = panel.cwd.file_name().unwrap_or("").to_string();
+            if focus.is_empty() {
+                cd_to(state, side, parent);
+            } else {
+                cd_to_with_focus(state, side, parent, focus);
+            }
             return vec![Command::RescanDir(side)];
         }
 
@@ -432,6 +450,19 @@ fn cd_to(state: &mut State, side: PanelSide, dir: camino::Utf8PathBuf) {
     panel.scroll = 0;
     panel.selection.clear();
     panel.loading = true;
+}
+
+/// `cd` to `dir`, asking the `DirScanned` handler to place the cursor on
+/// the entry named `focus` once the scan completes. Used when navigating up
+/// so the user lands on the directory they just left.
+fn cd_to_with_focus(
+    state: &mut State,
+    side: PanelSide,
+    dir: camino::Utf8PathBuf,
+    focus: String,
+) {
+    cd_to(state, side, dir);
+    state.panels[side.index()].pending_focus_name = Some(focus);
 }
 
 #[cfg(test)]
@@ -642,6 +673,37 @@ mod tests {
         let (s, cmds) = update(s, Event::Command(CommandId::EnterDir));
         assert_eq!(s.panels[0].cwd, cwd_before);
         assert!(cmds.is_empty());
+    }
+
+    #[test]
+    fn parent_dir_sets_pending_focus_to_left_directory() {
+        let mut s = st();
+        s.panels[0].cwd = "/Users/test/sub".into();
+        let (s, _) = update(s, Event::Command(CommandId::ParentDir));
+        assert_eq!(s.panels[0].pending_focus_name.as_deref(), Some("sub"));
+    }
+
+    #[test]
+    fn dir_scanned_lands_cursor_on_pending_focus_name() {
+        use crate::event::{WorkerId, WorkerMsg};
+        let mut s = st();
+        s.panels[0].pending_focus_name = Some("target".into());
+        let entries = vec![
+            crate::state::DirEntry::parent(),
+            crate::state::DirEntry::dir("crates"),
+            crate::state::DirEntry::dir("docs"),
+            crate::state::DirEntry::dir("target"),
+        ];
+        let ev = Event::Worker(
+            WorkerId(1),
+            WorkerMsg::DirScanned {
+                side: PanelSide::Left,
+                entries,
+            },
+        );
+        let (s, _) = update(s, ev);
+        assert_eq!(s.panels[0].cursor, 3);
+        assert!(s.panels[0].pending_focus_name.is_none());
     }
 
     #[test]

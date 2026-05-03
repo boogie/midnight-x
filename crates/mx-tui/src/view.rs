@@ -76,15 +76,44 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
         return;
     }
 
-    let visible_h = inner.height as usize;
-    let scroll = clamp_scroll(panel.scroll, panel.cursor, visible_h, panel.entries.len());
-
     let w = inner.width as usize;
     let show_mtime = w >= 50;
     let show_size = w >= 30;
-    let mtime_w: usize = if show_mtime { 17 } else { 0 };
-    let size_w: usize = if show_size { 8 } else { 0 };
-    let name_w = w.saturating_sub(mtime_w + size_w + 2);
+    let mtime_w: usize = if show_mtime { 16 } else { 0 };
+    let size_w: usize = if show_size { 7 } else { 0 };
+    // 1 col gutter + 1 col separator before size + 1 col separator before mtime
+    let separators = 1 + usize::from(show_size) + usize::from(show_mtime);
+    let name_w = w.saturating_sub(mtime_w + size_w + separators);
+
+    // Header row at the top of the inner area.
+    let header_y = inner.y;
+    {
+        let mut header = String::new();
+        header.push(' '); // gutter
+        header.push_str(&render_name("Name", name_w));
+        if show_size {
+            header.push('│');
+            header.push_str(&render_right("Size", size_w));
+        }
+        if show_mtime {
+            header.push('│');
+            header.push_str(&render_right("Modified", mtime_w));
+        }
+        let style = panel_title_style(theme, focused);
+        let p = Paragraph::new(header).style(style);
+        let row_area = Rect {
+            x: inner.x,
+            y: header_y,
+            width: inner.width,
+            height: 1,
+        };
+        frame.render_widget(p, row_area);
+    }
+
+    // Body uses one row less to make room for the header.
+    let body_y = inner.y + 1;
+    let visible_h = inner.height.saturating_sub(1) as usize;
+    let scroll = clamp_scroll(panel.scroll, panel.cursor, visible_h, panel.entries.len());
 
     for row in 0..visible_h {
         let entry_index = scroll + row;
@@ -123,34 +152,44 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
 
         let gutter = if is_selected { "•" } else { " " };
         let name_render = render_name(&entry.name, name_w);
-        let size_render = if show_size {
-            format!(" {}", mx_fs::format::format_size(entry.size))
-        } else {
-            String::new()
-        };
-        let mtime_render = if show_mtime {
-            format!(
-                " {}",
-                crate::format::format_mtime(entry.mtime, &state.config.ui.date_format)
-            )
-        } else {
-            String::new()
-        };
+        let mut text = String::new();
+        text.push_str(gutter);
+        text.push_str(&name_render);
+        if show_size {
+            text.push('│');
+            text.push_str(&mx_fs::format::format_size(entry.size));
+        }
+        if show_mtime {
+            text.push('│');
+            text.push_str(&crate::format::format_mtime(
+                entry.mtime,
+                &state.config.ui.date_format,
+            ));
+        }
 
-        let line = Line::from(vec![
-            Span::raw(gutter.to_string()),
-            Span::raw(name_render),
-            Span::raw(size_render),
-            Span::raw(mtime_render),
-        ]);
+        let line = Line::from(vec![Span::raw(text)]);
         let p = Paragraph::new(line).style(row_style);
         let row_area = Rect {
             x: inner.x,
-            y: inner.y + row as u16,
+            y: body_y + row as u16,
             width: inner.width,
             height: 1,
         };
         frame.render_widget(p, row_area);
+    }
+}
+
+fn render_right(text: &str, width: usize) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    if chars.len() >= width {
+        chars.into_iter().take(width).collect()
+    } else {
+        let mut s = String::with_capacity(width);
+        for _ in 0..(width - chars.len()) {
+            s.push(' ');
+        }
+        s.push_str(text);
+        s
     }
 }
 
@@ -193,17 +232,17 @@ fn clamp_scroll(scroll: usize, cursor: usize, visible_h: usize, len: usize) -> u
 fn render_status(frame: &mut Frame<'_>, area: Rect, state: &State) {
     let theme = &state.config.theme;
     let panel = state.focused();
-    let (files, dirs, bytes) =
-        panel
-            .entries
-            .iter()
-            .fold((0u64, 0u64, 0u64), |(f, d, b), e| match e.kind {
-                mx_core::state::EntryKind::Dir => (f, d + 1, b),
-                mx_core::state::EntryKind::Symlink | mx_core::state::EntryKind::File => {
-                    (f + 1, d, b + e.size.unwrap_or(0))
-                }
-                mx_core::state::EntryKind::Unreadable => (f, d, b),
-            });
+    let (files, dirs, bytes) = panel
+        .entries
+        .iter()
+        .filter(|e| e.name != "..")
+        .fold((0u64, 0u64, 0u64), |(f, d, b), e| match e.kind {
+            mx_core::state::EntryKind::Dir => (f, d + 1, b),
+            mx_core::state::EntryKind::Symlink | mx_core::state::EntryKind::File => {
+                (f + 1, d, b + e.size.unwrap_or(0))
+            }
+            mx_core::state::EntryKind::Unreadable => (f, d, b),
+        });
     let text = if state.status.text.is_empty() {
         format!(
             " {files} files, {dirs} dirs, {} ",

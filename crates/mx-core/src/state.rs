@@ -145,6 +145,10 @@ pub struct PanelState {
     pub sort: SortMode,
     pub show_hidden: bool,
     pub loading: bool,
+    /// When the next `DirScanned` arrives, place the cursor on the entry
+    /// whose `name` matches this. Used for "land on the dir we left" UX
+    /// after `..` / `ParentDir`.
+    pub pending_focus_name: Option<String>,
 }
 
 impl PanelState {
@@ -159,6 +163,7 @@ impl PanelState {
             sort: SortMode::default(),
             show_hidden: false,
             loading: false,
+            pending_focus_name: None,
         }
     }
 }
