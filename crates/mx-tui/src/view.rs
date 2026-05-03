@@ -41,7 +41,7 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
     let panel = &state.panels[side.index()];
     let focused = state.focus == side;
 
-    let title = format!(" {} ", panel.cwd);
+    let title = format!(" {} ", crate::format::shorten_home(&panel.cwd));
     let border_style = panel_title_style(theme, focused);
     let block = Block::default()
         .borders(Borders::ALL)
@@ -180,6 +180,9 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
 
     // Vertical column separators — overlay them now so they sit cleanly on
     // top of the header / body, and connect to the panel border with caps.
+    // Use a clean style that *clears* any reverse-video / bold the cursor
+    // or selection rows might have left at this column.
+    let sep_style = border_style.remove_modifier(Modifier::all());
     let inner_x = inner.x as usize;
     let mut sep_xs: Vec<u16> = Vec::with_capacity(2);
     if show_size {
@@ -188,23 +191,28 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
     if show_mtime {
         sep_xs.push((inner_x + 1 + name_w + 1 + size_w) as u16);
     }
+    let bottom_y = area.y + area.height.saturating_sub(1);
     for x in sep_xs {
-        // Top cap (replaces ─ on the top border).
+        // Top cap — only replace if it's plain border `─`, never overwrite
+        // the cwd title that ratatui paints over the top border.
         if let Some(cell) = frame.buffer_mut().cell_mut((x, area.y)) {
-            cell.set_symbol("┬");
-            cell.set_style(border_style);
+            if cell.symbol() == "─" {
+                cell.set_symbol("┬");
+                cell.set_style(sep_style);
+            }
         }
-        // Bottom cap (replaces ─ on the bottom border).
-        let bottom_y = area.y + area.height.saturating_sub(1);
+        // Bottom cap — same guard.
         if let Some(cell) = frame.buffer_mut().cell_mut((x, bottom_y)) {
-            cell.set_symbol("┴");
-            cell.set_style(border_style);
+            if cell.symbol() == "─" {
+                cell.set_symbol("┴");
+                cell.set_style(sep_style);
+            }
         }
         // Vertical line through every inner row.
         for y in inner.y..inner.y + inner.height {
             if let Some(cell) = frame.buffer_mut().cell_mut((x, y)) {
                 cell.set_symbol("│");
-                cell.set_style(border_style);
+                cell.set_style(sep_style);
             }
         }
     }

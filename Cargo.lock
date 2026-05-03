@@ -671,6 +671,7 @@ dependencies = [
 name = "mx-tui"
 version = "0.0.1"
 dependencies = [
+ "camino",
  "chrono",
  "crossterm",
  "insta",

@@ -15,6 +15,7 @@ workspace = true
 [dependencies]
 mx-core    = { workspace = true }
 mx-fs      = { workspace = true }
+camino     = { workspace = true }
 chrono     = { workspace = true }
 crossterm  = { workspace = true }
 ratatui    = { workspace = true }
