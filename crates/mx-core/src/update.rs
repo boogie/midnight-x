@@ -605,8 +605,34 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             }));
         }
 
-        // Phase 3 follow-on task.
-        CommandId::Move => {}
+        CommandId::Move => {
+            use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind, Modal};
+            let panel = state.focused();
+            if panel.entries.is_empty() {
+                return Vec::new();
+            }
+            let src = collect_targets(panel);
+            if src.is_empty() {
+                return Vec::new();
+            }
+            let other = match state.focus {
+                PanelSide::Left => 1,
+                PanelSide::Right => 0,
+            };
+            let dst = state.panels[other].cwd.clone();
+            let body = if src.len() == 1 {
+                format!("Move {} to {}?", src[0], dst)
+            } else {
+                format!("Move {} items to {}?", src.len(), dst)
+            };
+            state.modal = Some(Modal::Confirm(ConfirmDialog {
+                title: "Confirm move".into(),
+                body,
+                buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
+                focused: 0,
+                kind: ConfirmKind::StartMove { src, dst },
+            }));
+        }
     }
     Vec::new()
 }

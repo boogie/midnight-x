@@ -25,6 +25,7 @@ const TICK: Duration = Duration::from_millis(100);
 /// # Errors
 ///
 /// Propagates io errors from terminal acquisition / rendering.
+#[allow(clippy::too_many_lines)] // top-level main loop; further splitting hurts readability
 pub fn run(config: Config) -> Result<()> {
     let cfg = Arc::new(config);
 
@@ -112,7 +113,16 @@ pub fn run(config: Config) -> Result<()> {
                 Command::ResolveConflict(id, policy) => {
                     executor.resolve_conflict(id, policy);
                 }
-                Command::StartMove { .. } => { /* Task 15 */ }
+                Command::StartMove { src, dst } => {
+                    let id = executor.start_move(src, dst);
+                    state.workers.insert(
+                        id,
+                        mx_core::state::WorkerState {
+                            id,
+                            kind: mx_core::state::WorkerKind::Move,
+                        },
+                    );
+                }
             }
         }
 
