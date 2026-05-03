@@ -12,7 +12,7 @@ use crate::command::{Command, CommandId};
 use crate::event::Event;
 use crate::input::{InputEvent, KeyChord};
 use crate::keymap::Lookup;
-use crate::state::{Modal, State};
+use crate::state::{Modal, PanelSide, State};
 
 /// Pure transition. Takes ownership of `state`, returns the new state and any
 /// `Command`s the executor should run.
@@ -212,10 +212,39 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             set_cursor(state, last);
         }
 
+        CommandId::EnterDir => {
+            let side = state.focus;
+            let panel = state.focused();
+            if panel.entries.is_empty() {
+                return Vec::new();
+            }
+            let entry = &panel.entries[panel.cursor];
+            if !entry.is_dir_like() {
+                return Vec::new();
+            }
+            let target = if entry.name == ".." {
+                match panel.cwd.parent() {
+                    Some(p) if !p.as_str().is_empty() => p.to_path_buf(),
+                    _ => return Vec::new(),
+                }
+            } else {
+                panel.cwd.join(&entry.name)
+            };
+            cd_to(state, side, target);
+            return vec![Command::RescanDir(side)];
+        }
+        CommandId::ParentDir => {
+            let side = state.focus;
+            let parent = match state.focused().cwd.parent() {
+                Some(p) if !p.as_str().is_empty() => p.to_path_buf(),
+                _ => return Vec::new(),
+            };
+            cd_to(state, side, parent);
+            return vec![Command::RescanDir(side)];
+        }
+
         // Phase 2 / 3 work below.
-        CommandId::EnterDir
-        | CommandId::ParentDir
-        | CommandId::ToggleSelect
+        CommandId::ToggleSelect
         | CommandId::SelectAll
         | CommandId::SelectNone
         | CommandId::InvertSelection
@@ -254,6 +283,16 @@ fn set_cursor(state: &mut State, i: usize) {
     }
     let last = panel.entries.len() - 1;
     panel.cursor = i.min(last);
+}
+
+fn cd_to(state: &mut State, side: PanelSide, dir: camino::Utf8PathBuf) {
+    let panel = &mut state.panels[side.index()];
+    panel.cwd = dir;
+    panel.entries = std::sync::Arc::new([]);
+    panel.cursor = 0;
+    panel.scroll = 0;
+    panel.selection.clear();
+    panel.loading = true;
 }
 
 #[cfg(test)]
@@ -421,6 +460,67 @@ mod tests {
         assert_eq!(s.panels[0].cursor, 10);
         let (s, _) = update(s, Event::Command(CommandId::CursorPageUp));
         assert_eq!(s.panels[0].cursor, 0);
+    }
+
+    #[test]
+    fn enter_dir_on_dir_changes_cwd_and_emits_rescan() {
+        let mut s = st();
+        s.panels[0].entries = vec![
+            crate::state::DirEntry::parent(),
+            crate::state::DirEntry::dir("subdir"),
+        ]
+        .into();
+        s.panels[0].cursor = 1;
+        s.panels[0].cwd = "/Users/test".into();
+
+        let (s, cmds) = update(s, Event::Command(CommandId::EnterDir));
+        assert_eq!(s.panels[0].cwd, "/Users/test/subdir");
+        assert!(s.panels[0].loading);
+        assert_eq!(s.panels[0].cursor, 0);
+        assert!(s.panels[0].selection.is_empty());
+        assert_eq!(cmds, vec![Command::RescanDir(PanelSide::Left)]);
+    }
+
+    #[test]
+    fn enter_dir_on_parent_walks_up() {
+        let mut s = st();
+        s.panels[0].entries = vec![crate::state::DirEntry::parent()].into();
+        s.panels[0].cursor = 0;
+        s.panels[0].cwd = "/Users/test/sub".into();
+
+        let (s, cmds) = update(s, Event::Command(CommandId::EnterDir));
+        assert_eq!(s.panels[0].cwd, "/Users/test");
+        assert_eq!(cmds, vec![Command::RescanDir(PanelSide::Left)]);
+    }
+
+    #[test]
+    fn enter_dir_on_file_is_noop() {
+        let mut s = st();
+        s.panels[0].entries = vec![crate::state::DirEntry::file("x.txt", 1)].into();
+        s.panels[0].cursor = 0;
+        let cwd_before = s.panels[0].cwd.clone();
+
+        let (s, cmds) = update(s, Event::Command(CommandId::EnterDir));
+        assert_eq!(s.panels[0].cwd, cwd_before);
+        assert!(cmds.is_empty());
+    }
+
+    #[test]
+    fn parent_dir_walks_up_and_rescans() {
+        let mut s = st();
+        s.panels[0].cwd = "/a/b/c".into();
+        let (s, cmds) = update(s, Event::Command(CommandId::ParentDir));
+        assert_eq!(s.panels[0].cwd, "/a/b");
+        assert_eq!(cmds, vec![Command::RescanDir(PanelSide::Left)]);
+    }
+
+    #[test]
+    fn parent_dir_at_root_is_noop() {
+        let mut s = st();
+        s.panels[0].cwd = "/".into();
+        let (s, cmds) = update(s, Event::Command(CommandId::ParentDir));
+        assert_eq!(s.panels[0].cwd, "/");
+        assert!(cmds.is_empty());
     }
 
     #[test]
