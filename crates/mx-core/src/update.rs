@@ -149,8 +149,9 @@ fn handle_chord(state: &mut State, chord: KeyChord, cmds: &mut Vec<Command>) {
     }
 }
 
-fn handle_worker_msg(state: &mut State, _id: crate::event::WorkerId, msg: crate::event::WorkerMsg) {
+fn handle_worker_msg(state: &mut State, id: crate::event::WorkerId, msg: crate::event::WorkerMsg) {
     use crate::event::WorkerMsg;
+    use crate::state::{ErrorDialog, Modal, ProgressDialog};
     match msg {
         WorkerMsg::DirScanned { side, entries } => {
             let panel = &mut state.panels[side.index()];
@@ -178,11 +179,45 @@ fn handle_worker_msg(state: &mut State, _id: crate::event::WorkerId, msg: crate:
                 panel.scroll = last;
             }
         }
-        // Phase 3 surfaces these in modals.
-        WorkerMsg::Progress { .. }
-        | WorkerMsg::Conflict { .. }
-        | WorkerMsg::Done
-        | WorkerMsg::Failed { .. } => {}
+        WorkerMsg::Progress { bytes_done, bytes_total, current_path } => {
+            let need_open = !matches!(state.modal, Some(Modal::Progress(ref p)) if p.worker_id == id);
+            if need_open {
+                state.modal = Some(Modal::Progress(ProgressDialog {
+                    title: "Working…".into(),
+                    current_path,
+                    bytes_done,
+                    bytes_total,
+                    worker_id: id,
+                }));
+            } else if let Some(Modal::Progress(p)) = state.modal.as_mut() {
+                p.bytes_done = bytes_done;
+                p.bytes_total = bytes_total;
+                p.current_path = current_path;
+            }
+        }
+        WorkerMsg::Done => {
+            if let Some(Modal::Progress(p)) = state.modal.as_ref() {
+                if p.worker_id == id {
+                    state.modal = None;
+                }
+            }
+            state.workers.remove(&id);
+        }
+        WorkerMsg::Failed { errors } => {
+            state.modal = Some(Modal::Error(ErrorDialog {
+                title: "Operation failed".into(),
+                body: format!("{} error(s)", errors.len()),
+                details: errors
+                    .iter()
+                    .take(20)
+                    .map(|(p, e)| format!("{p}: {e}"))
+                    .collect(),
+            }));
+            state.workers.remove(&id);
+        }
+        WorkerMsg::Conflict { .. } => {
+            // Filled in in Task 14 (copy/move conflict round-trip).
+        }
     }
 }
 
@@ -503,12 +538,32 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             }));
         }
 
-        // Phase 3 work below.
-        CommandId::Copy
-        | CommandId::Move
-        | CommandId::Delete => {
-            // Phase 3 follow-on tasks.
+        CommandId::Delete => {
+            use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind, Modal};
+            let panel = state.focused();
+            if panel.entries.is_empty() {
+                return Vec::new();
+            }
+            let paths = collect_targets(panel);
+            if paths.is_empty() {
+                return Vec::new();
+            }
+            let body = if paths.len() == 1 {
+                format!("Delete {}?", paths[0])
+            } else {
+                format!("Delete {} items?", paths.len())
+            };
+            state.modal = Some(Modal::Confirm(ConfirmDialog {
+                title: "Confirm delete".into(),
+                body,
+                buttons: vec![ConfirmButton::No, ConfirmButton::Yes],
+                focused: 0, // Default to "No" for destructive ops.
+                kind: ConfirmKind::Delete { paths },
+            }));
         }
+
+        // Phase 3 follow-on tasks.
+        CommandId::Copy | CommandId::Move => {}
     }
     Vec::new()
 }
@@ -546,6 +601,25 @@ fn cd_to(state: &mut State, side: PanelSide, dir: camino::Utf8PathBuf) {
     panel.scroll = 0;
     panel.selection.clear();
     panel.loading = true;
+}
+
+fn collect_targets(panel: &crate::state::PanelState) -> Vec<camino::Utf8PathBuf> {
+    let mut out = Vec::new();
+    if !panel.selection.is_empty() {
+        for &i in &panel.selection {
+            if let Some(e) = panel.entries.get(i) {
+                if e.name == ".." {
+                    continue;
+                }
+                out.push(panel.cwd.join(&e.name));
+            }
+        }
+    } else if let Some(e) = panel.entries.get(panel.cursor) {
+        if e.name != ".." {
+            out.push(panel.cwd.join(&e.name));
+        }
+    }
+    out
 }
 
 fn input_modal_consume_key(d: &mut crate::state::InputDialog, c: KeyChord) -> bool {

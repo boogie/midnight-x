@@ -432,12 +432,7 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
         Modal::Error(d) => d.body.clone(),
         Modal::Confirm(d) => render_confirm_body(d),
         Modal::Input(d) => render_input_body(d),
-        Modal::Progress(d) => {
-            format!(
-                "{}\n{} / {} bytes",
-                d.current_path, d.bytes_done, d.bytes_total
-            )
-        }
+        Modal::Progress(d) => render_progress_body(d, area),
         Modal::Viewer(d) => render_viewer_body(d, area),
     };
     let p = Paragraph::new(body)
@@ -616,6 +611,34 @@ fn render_confirm_body(d: &mx_core::state::ConfirmDialog) -> String {
             let _ = write!(out, " {label} ");
         }
     }
+    out
+}
+
+#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+fn render_progress_body(d: &mx_core::state::ProgressDialog, area: Rect) -> String {
+    use std::fmt::Write as _;
+    let mut out = String::new();
+    out.push_str(d.current_path.as_str());
+    out.push('\n');
+    let inner_w = area.width.saturating_sub(4) as usize;
+    let bar_w = inner_w.saturating_sub(8);
+    if d.bytes_total > 0 && bar_w > 0 {
+        let ratio = (d.bytes_done.min(d.bytes_total)) as f64 / d.bytes_total as f64;
+        let filled = (ratio * bar_w as f64) as usize;
+        out.push('[');
+        for _ in 0..filled {
+            out.push('█');
+        }
+        for _ in filled..bar_w {
+            out.push('─');
+        }
+        let pct = (d.bytes_done * 100) / d.bytes_total.max(1);
+        let _ = write!(out, "] {pct:>3}%");
+    } else {
+        out.push('…');
+    }
+    out.push_str("\n\n");
+    out.push_str(" Esc / Ctrl-C = Cancel ");
     out
 }
 

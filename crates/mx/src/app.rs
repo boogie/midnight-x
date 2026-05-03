@@ -86,10 +86,21 @@ pub fn run(config: Config) -> Result<()> {
                     }
                     schedule_rescan(&mut executor, &state, state.focus);
                 }
+                Command::StartDelete { paths } => {
+                    let id = executor.start_delete(paths);
+                    state.workers.insert(
+                        id,
+                        mx_core::state::WorkerState {
+                            id,
+                            kind: mx_core::state::WorkerKind::Delete,
+                        },
+                    );
+                }
+                Command::CancelWorker(id) => {
+                    executor.cancel(id);
+                }
                 Command::StartCopy { .. }
                 | Command::StartMove { .. }
-                | Command::StartDelete { .. }
-                | Command::CancelWorker(_)
                 | Command::ResolveConflict(_, _) => { /* later Phase 3 tasks */ }
             }
         }
