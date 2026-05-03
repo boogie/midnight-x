@@ -5,4 +5,5 @@
 #![forbid(unsafe_code)]
 
 pub mod plain_text;
-// Re-exports filled in by Task 13.
+
+pub use plain_text::{PlainTextPreviewer, Preview, Previewer};
