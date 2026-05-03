@@ -1,0 +1,19 @@
+[package]
+name        = "mx-core"
+version     = "0.0.1"
+description = "Midnight X — pure data types and update() core (no terminal deps)"
+edition.workspace      = true
+rust-version.workspace = true
+authors.workspace      = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+
+[lints]
+workspace = true
+
+[dependencies]
+camino    = { workspace = true }
+serde     = { workspace = true }
+thiserror = { workspace = true }
+tracing   = { workspace = true }

@@ -1,0 +1,33 @@
+[package]
+name        = "mx"
+version     = "0.0.1"
+description = "Midnight X — modern Rust two-pane terminal file manager (mc-style)"
+edition.workspace      = true
+rust-version.workspace = true
+authors.workspace      = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+
+[[bin]]
+name = "mx"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+mx-core            = { workspace = true }
+mx-config          = { workspace = true }
+mx-tui             = { workspace = true }
+crossterm          = { workspace = true }
+pico-args          = { workspace = true }
+anyhow             = { workspace = true }
+tracing            = { workspace = true }
+tracing-appender   = { workspace = true }
+tracing-subscriber = { workspace = true }
+directories        = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+tempfile   = { workspace = true }

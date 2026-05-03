@@ -1,0 +1,22 @@
+[package]
+name        = "mx-tui"
+version     = "0.0.1"
+description = "Midnight X — ratatui Renderer, layout, theme styles, input thread"
+edition.workspace      = true
+rust-version.workspace = true
+authors.workspace      = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mx-core    = { workspace = true }
+crossterm  = { workspace = true }
+ratatui    = { workspace = true }
+tracing    = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true }
