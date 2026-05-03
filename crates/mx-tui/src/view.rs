@@ -3,7 +3,7 @@
 
 use mx_core::state::{Modal, PanelSide, State};
 
-use ratatui::layout::Rect;
+use ratatui::layout::{Alignment, Rect};
 use ratatui::widgets::{Block, Borders, Clear, Paragraph};
 use ratatui::Frame;
 
@@ -47,6 +47,7 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
         .borders(Borders::ALL)
         .border_style(border_style)
         .title(title)
+        .title_alignment(Alignment::Center)
         .title_style(border_style)
         .style(frame_style(theme));
 
