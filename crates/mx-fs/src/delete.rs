@@ -40,7 +40,8 @@ fn delete_inner(path: &Utf8Path, cancel: &Arc<AtomicBool>, r: &mut DeleteReport)
     let meta = match std::fs::symlink_metadata(path) {
         Ok(m) => m,
         Err(e) => {
-            r.errors.push((path.to_path_buf(), dir_scan::map_io_pub(&e)));
+            r.errors
+                .push((path.to_path_buf(), dir_scan::map_io_pub(&e)));
             return;
         }
     };
@@ -48,7 +49,8 @@ fn delete_inner(path: &Utf8Path, cancel: &Arc<AtomicBool>, r: &mut DeleteReport)
         let read = match std::fs::read_dir(path) {
             Ok(r) => r,
             Err(e) => {
-                r.errors.push((path.to_path_buf(), dir_scan::map_io_pub(&e)));
+                r.errors
+                    .push((path.to_path_buf(), dir_scan::map_io_pub(&e)));
                 return;
             }
         };
@@ -68,12 +70,16 @@ fn delete_inner(path: &Utf8Path, cancel: &Arc<AtomicBool>, r: &mut DeleteReport)
         }
         match std::fs::remove_dir(path) {
             Ok(()) => r.deleted += 1,
-            Err(e) => r.errors.push((path.to_path_buf(), dir_scan::map_io_pub(&e))),
+            Err(e) => r
+                .errors
+                .push((path.to_path_buf(), dir_scan::map_io_pub(&e))),
         }
     } else {
         match std::fs::remove_file(path) {
             Ok(()) => r.deleted += 1,
-            Err(e) => r.errors.push((path.to_path_buf(), dir_scan::map_io_pub(&e))),
+            Err(e) => r
+                .errors
+                .push((path.to_path_buf(), dir_scan::map_io_pub(&e))),
         }
     }
 }

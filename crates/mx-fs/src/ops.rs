@@ -64,10 +64,7 @@ mod tests {
     fn mkdir_already_exists_returns_error() {
         let t = td();
         std::fs::create_dir(t.path().join("there")).unwrap();
-        assert_eq!(
-            mkdir(&p(&t), "there").unwrap_err(),
-            FsError::AlreadyExists
-        );
+        assert_eq!(mkdir(&p(&t), "there").unwrap_err(), FsError::AlreadyExists);
     }
 
     #[test]

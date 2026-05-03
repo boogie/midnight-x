@@ -156,11 +156,18 @@ fn confirm_modal_two_buttons() {
         body: "Delete /tmp/x.txt?".into(),
         buttons: vec![ConfirmButton::No, ConfirmButton::Yes],
         focused: 0,
-        kind: ConfirmKind::Delete { paths: vec!["/tmp/x.txt".into()] },
+        kind: ConfirmKind::Delete {
+            paths: vec!["/tmp/x.txt".into()],
+        },
     }));
     let buf = draw_to_buffer(
         &s,
-        Rect { x: 0, y: 0, width: 100, height: 30 },
+        Rect {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 30,
+        },
     );
     insta::assert_snapshot!("confirm_classic_wide", buffer_snapshot(&buf));
 }
@@ -174,11 +181,18 @@ fn input_modal_with_value() {
         prompt: "name:".into(),
         value: "newdir".into(),
         cursor: 6,
-        kind: InputKind::Mkdir { parent: "/tmp".into() },
+        kind: InputKind::Mkdir {
+            parent: "/tmp".into(),
+        },
     }));
     let buf = draw_to_buffer(
         &s,
-        Rect { x: 0, y: 0, width: 100, height: 30 },
+        Rect {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 30,
+        },
     );
     insta::assert_snapshot!("input_classic_wide", buffer_snapshot(&buf));
 }
@@ -197,7 +211,12 @@ fn progress_modal_at_50_percent() {
     }));
     let buf = draw_to_buffer(
         &s,
-        Rect { x: 0, y: 0, width: 100, height: 30 },
+        Rect {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 30,
+        },
     );
     insta::assert_snapshot!("progress_classic_wide", buffer_snapshot(&buf));
 }
@@ -217,7 +236,12 @@ fn error_modal_with_details() {
     }));
     let buf = draw_to_buffer(
         &s,
-        Rect { x: 0, y: 0, width: 100, height: 30 },
+        Rect {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 30,
+        },
     );
     insta::assert_snapshot!("error_classic_wide", buffer_snapshot(&buf));
 }

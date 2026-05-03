@@ -190,8 +190,13 @@ fn handle_worker_msg(
                 panel.scroll = last;
             }
         }
-        WorkerMsg::Progress { bytes_done, bytes_total, current_path } => {
-            let need_open = !matches!(state.modal, Some(Modal::Progress(ref p)) if p.worker_id == id);
+        WorkerMsg::Progress {
+            bytes_done,
+            bytes_total,
+            current_path,
+        } => {
+            let need_open =
+                !matches!(state.modal, Some(Modal::Progress(ref p)) if p.worker_id == id);
             if need_open {
                 state.modal = Some(Modal::Progress(ProgressDialog {
                     title: "Working…".into(),
@@ -674,11 +679,7 @@ fn cd_to(state: &mut State, side: PanelSide, dir: camino::Utf8PathBuf) {
 /// Pop the worker entry, mark its affected panels as loading, and emit a
 /// `RescanDir` per side. Called from both `Done` and `Failed` paths so the
 /// UI always reflects the post-op filesystem state.
-fn schedule_post_op_rescan(
-    state: &mut State,
-    id: crate::event::WorkerId,
-    cmds: &mut Vec<Command>,
-) {
+fn schedule_post_op_rescan(state: &mut State, id: crate::event::WorkerId, cmds: &mut Vec<Command>) {
     let Some(worker) = state.workers.remove(&id) else {
         return;
     };
@@ -719,10 +720,7 @@ fn build_op_dialog(state: &State, verb: OpVerb) -> Option<crate::state::OpDialog
     let (title, prompt, action_button, kind) = match verb {
         OpVerb::Copy => {
             let prompt = if src.len() == 1 {
-                format!(
-                    "Copy {} to:",
-                    src[0].file_name().unwrap_or(src[0].as_str())
-                )
+                format!("Copy {} to:", src[0].file_name().unwrap_or(src[0].as_str()))
             } else {
                 format!("Copy {} items to:", src.len())
             };
@@ -735,10 +733,7 @@ fn build_op_dialog(state: &State, verb: OpVerb) -> Option<crate::state::OpDialog
         }
         OpVerb::Move => {
             let prompt = if src.len() == 1 {
-                format!(
-                    "Move {} to:",
-                    src[0].file_name().unwrap_or(src[0].as_str())
-                )
+                format!("Move {} to:", src[0].file_name().unwrap_or(src[0].as_str()))
             } else {
                 format!("Move {} items to:", src.len())
             };
@@ -947,7 +942,10 @@ fn resolve_input(state: &mut State) -> Vec<Command> {
         return Vec::new();
     }
     match d.kind {
-        InputKind::Mkdir { parent } => vec![Command::Mkdir { parent, name: value }],
+        InputKind::Mkdir { parent } => vec![Command::Mkdir {
+            parent,
+            name: value,
+        }],
         InputKind::Rename { from } => {
             let parent = from
                 .parent()
@@ -974,14 +972,12 @@ fn resolve_confirm(state: &mut State) -> Vec<Command> {
         (ConfirmKind::Delete { paths }, Some(ConfirmButton::Yes | ConfirmButton::Delete)) => {
             vec![Command::StartDelete { paths }]
         }
-        (
-            ConfirmKind::StartCopy { src, dst },
-            Some(ConfirmButton::Yes | ConfirmButton::Copy),
-        ) => vec![Command::StartCopy { src, dst }],
-        (
-            ConfirmKind::StartMove { src, dst },
-            Some(ConfirmButton::Yes | ConfirmButton::Move),
-        ) => vec![Command::StartMove { src, dst }],
+        (ConfirmKind::StartCopy { src, dst }, Some(ConfirmButton::Yes | ConfirmButton::Copy)) => {
+            vec![Command::StartCopy { src, dst }]
+        }
+        (ConfirmKind::StartMove { src, dst }, Some(ConfirmButton::Yes | ConfirmButton::Move)) => {
+            vec![Command::StartMove { src, dst }]
+        }
         (ConfirmKind::Conflict { worker }, Some(b)) => {
             let policy = match b {
                 ConfirmButton::Yes => P::Yes,
@@ -1005,12 +1001,7 @@ fn resolve_confirm(state: &mut State) -> Vec<Command> {
 /// `cd` to `dir`, asking the `DirScanned` handler to place the cursor on
 /// the entry named `focus` once the scan completes. Used when navigating up
 /// so the user lands on the directory they just left.
-fn cd_to_with_focus(
-    state: &mut State,
-    side: PanelSide,
-    dir: camino::Utf8PathBuf,
-    focus: String,
-) {
+fn cd_to_with_focus(state: &mut State, side: PanelSide, dir: camino::Utf8PathBuf, focus: String) {
     cd_to(state, side, dir);
     state.panels[side.index()].pending_focus_name = Some(focus);
 }
@@ -1140,7 +1131,9 @@ mod tests {
             body: "y".into(),
             buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
             focused: 0,
-            kind: ConfirmKind::Delete { paths: vec!["/x".into()] },
+            kind: ConfirmKind::Delete {
+                paths: vec!["/x".into()],
+            },
         }));
         let (s, _) = update(s, key(KeyCode::Tab));
         match s.modal {
@@ -1163,13 +1156,17 @@ mod tests {
             body: "1 file".into(),
             buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
             focused: 0,
-            kind: ConfirmKind::Delete { paths: vec!["/x/y.txt".into()] },
+            kind: ConfirmKind::Delete {
+                paths: vec!["/x/y.txt".into()],
+            },
         }));
         let (s, cmds) = update(s, key(KeyCode::Enter));
         assert!(s.modal.is_none());
         assert_eq!(
             cmds,
-            vec![Command::StartDelete { paths: vec!["/x/y.txt".into()] }],
+            vec![Command::StartDelete {
+                paths: vec!["/x/y.txt".into()]
+            }],
         );
     }
 
@@ -1182,7 +1179,9 @@ mod tests {
             prompt: "name:".into(),
             value: String::new(),
             cursor: 0,
-            kind: InputKind::Mkdir { parent: "/x".into() },
+            kind: InputKind::Mkdir {
+                parent: "/x".into(),
+            },
         }));
         let (s, _) = update(s, key(KeyCode::Char('a')));
         let (s, _) = update(s, key(KeyCode::Char('b')));
@@ -1204,7 +1203,9 @@ mod tests {
             prompt: "y".into(),
             value: "abc".into(),
             cursor: 3,
-            kind: InputKind::Mkdir { parent: "/x".into() },
+            kind: InputKind::Mkdir {
+                parent: "/x".into(),
+            },
         }));
         let (s, _) = update(s, key(KeyCode::Backspace));
         match s.modal {
@@ -1225,13 +1226,18 @@ mod tests {
             prompt: "name:".into(),
             value: "src".into(),
             cursor: 3,
-            kind: InputKind::Mkdir { parent: "/proj".into() },
+            kind: InputKind::Mkdir {
+                parent: "/proj".into(),
+            },
         }));
         let (s, cmds) = update(s, key(KeyCode::Enter));
         assert!(s.modal.is_none());
         assert_eq!(
             cmds,
-            vec![Command::Mkdir { parent: "/proj".into(), name: "src".into() }],
+            vec![Command::Mkdir {
+                parent: "/proj".into(),
+                name: "src".into()
+            }],
         );
     }
 
@@ -1244,7 +1250,9 @@ mod tests {
             body: "1 file".into(),
             buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
             focused: 1,
-            kind: ConfirmKind::Delete { paths: vec!["/x/y.txt".into()] },
+            kind: ConfirmKind::Delete {
+                paths: vec!["/x/y.txt".into()],
+            },
         }));
         let (s, cmds) = update(s, key(KeyCode::Enter));
         assert!(s.modal.is_none());

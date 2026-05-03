@@ -254,9 +254,7 @@ fn run_copy_worker(
     let handler = {
         let tx = tx_main.clone();
         let policy_state = Arc::clone(&policy_state);
-        move |src: &camino::Utf8Path,
-              dst: &camino::Utf8Path|
-              -> crate::copy::OverwriteAction {
+        move |src: &camino::Utf8Path, dst: &camino::Utf8Path| -> crate::copy::OverwriteAction {
             if let Some(p) = *policy_state.lock().expect("policy_state poisoned") {
                 return policy_to_action(p);
             }
@@ -327,9 +325,7 @@ fn run_move_worker(
     let handler = {
         let tx = tx_main.clone();
         let policy_state = Arc::clone(&policy_state);
-        move |src: &camino::Utf8Path,
-              dst: &camino::Utf8Path|
-              -> crate::copy::OverwriteAction {
+        move |src: &camino::Utf8Path, dst: &camino::Utf8Path| -> crate::copy::OverwriteAction {
             if let Some(p) = *policy_state.lock().expect("policy_state poisoned") {
                 return policy_to_action(p);
             }

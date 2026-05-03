@@ -191,13 +191,13 @@ pub enum Modal {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OpDialog {
-    pub title:    String,
-    pub prompt:   String,        // "Copy 160529.i to:"
-    pub target:   String,        // editable destination path
-    pub cursor:   usize,
-    pub focus:    OpFocus,
-    pub buttons:  Vec<ConfirmButton>,
-    pub kind:     OpKind,
+    pub title: String,
+    pub prompt: String, // "Copy 160529.i to:"
+    pub target: String, // editable destination path
+    pub cursor: usize,
+    pub focus: OpFocus,
+    pub buttons: Vec<ConfirmButton>,
+    pub kind: OpKind,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -224,11 +224,11 @@ pub struct ViewerDialog {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConfirmDialog {
-    pub title:   String,
-    pub body:    String,
+    pub title: String,
+    pub body: String,
     pub buttons: Vec<ConfirmButton>,
     pub focused: usize,
-    pub kind:    ConfirmKind,
+    pub kind: ConfirmKind,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -250,20 +250,30 @@ pub enum ConfirmButton {
 /// What the calling code wants to do with the confirm result.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConfirmKind {
-    Delete { paths: Vec<Utf8PathBuf> },
-    StartCopy { src: Vec<Utf8PathBuf>, dst: Utf8PathBuf },
-    StartMove { src: Vec<Utf8PathBuf>, dst: Utf8PathBuf },
-    Conflict { worker: crate::event::WorkerId },
+    Delete {
+        paths: Vec<Utf8PathBuf>,
+    },
+    StartCopy {
+        src: Vec<Utf8PathBuf>,
+        dst: Utf8PathBuf,
+    },
+    StartMove {
+        src: Vec<Utf8PathBuf>,
+        dst: Utf8PathBuf,
+    },
+    Conflict {
+        worker: crate::event::WorkerId,
+    },
     QuitWithWorkers,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InputDialog {
-    pub title:  String,
+    pub title: String,
     pub prompt: String,
-    pub value:  String,
+    pub value: String,
     pub cursor: usize,
-    pub kind:   InputKind,
+    pub kind: InputKind,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

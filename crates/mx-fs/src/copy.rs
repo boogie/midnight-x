@@ -253,7 +253,10 @@ mod tests {
         );
         assert!(report.errors.is_empty());
         assert_eq!(std::fs::read(t.path().join("dst/a.txt")).unwrap(), b"x");
-        assert_eq!(std::fs::read(t.path().join("dst/inner/b.txt")).unwrap(), b"yy");
+        assert_eq!(
+            std::fs::read(t.path().join("dst/inner/b.txt")).unwrap(),
+            b"yy"
+        );
     }
 
     #[test]

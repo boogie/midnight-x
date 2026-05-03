@@ -207,13 +207,7 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
         let footer_text = panel
             .entries
             .get(panel.cursor)
-            .map(|e| {
-                format_footer(
-                    e,
-                    inner.width as usize,
-                    &state.config.ui.date_format,
-                )
-            })
+            .map(|e| format_footer(e, inner.width as usize, &state.config.ui.date_format))
             .unwrap_or_default();
         let p = Paragraph::new(footer_text).style(frame_style(theme));
         let row_area = Rect {
@@ -291,7 +285,9 @@ fn format_footer(entry: &mx_core::state::DirEntry, width: usize, date_fmt: &str)
     let size_str = match entry.kind {
         EntryKind::Dir if entry.name == ".." => "<Up>".to_string(),
         EntryKind::Dir => "<Dir>".to_string(),
-        _ => mx_fs::format::format_size(entry.size).trim_start().to_string(),
+        _ => mx_fs::format::format_size(entry.size)
+            .trim_start()
+            .to_string(),
     };
     let mtime_str = if entry.mtime.is_some() {
         crate::format::format_mtime(entry.mtime, date_fmt)
@@ -379,17 +375,18 @@ fn clamp_scroll(scroll: usize, cursor: usize, visible_h: usize, len: usize) -> u
 fn render_status(frame: &mut Frame<'_>, area: Rect, state: &State) {
     let theme = &state.config.theme;
     let panel = state.focused();
-    let (files, dirs, bytes) = panel
-        .entries
-        .iter()
-        .filter(|e| e.name != "..")
-        .fold((0u64, 0u64, 0u64), |(f, d, b), e| match e.kind {
-            mx_core::state::EntryKind::Dir => (f, d + 1, b),
-            mx_core::state::EntryKind::Symlink | mx_core::state::EntryKind::File => {
-                (f + 1, d, b + e.size.unwrap_or(0))
-            }
-            mx_core::state::EntryKind::Unreadable => (f, d, b),
-        });
+    let (files, dirs, bytes) =
+        panel
+            .entries
+            .iter()
+            .filter(|e| e.name != "..")
+            .fold((0u64, 0u64, 0u64), |(f, d, b), e| match e.kind {
+                mx_core::state::EntryKind::Dir => (f, d + 1, b),
+                mx_core::state::EntryKind::Symlink | mx_core::state::EntryKind::File => {
+                    (f + 1, d, b + e.size.unwrap_or(0))
+                }
+                mx_core::state::EntryKind::Unreadable => (f, d, b),
+            });
     let text = if state.status.text.is_empty() {
         format!(
             " {files} files, {dirs} dirs, {} ",
@@ -480,11 +477,11 @@ fn modal_title(modal: &Modal) -> &'static str {
         Modal::Help => " Help ",
         Modal::QuitConfirm => " Quit? ",
         Modal::Confirm(d) => match d.kind {
-            mx_core::state::ConfirmKind::Delete { .. }    => " Delete ",
+            mx_core::state::ConfirmKind::Delete { .. } => " Delete ",
             mx_core::state::ConfirmKind::StartCopy { .. } => " Copy ",
             mx_core::state::ConfirmKind::StartMove { .. } => " Move ",
-            mx_core::state::ConfirmKind::Conflict { .. }  => " Overwrite? ",
-            mx_core::state::ConfirmKind::QuitWithWorkers  => " Quit? ",
+            mx_core::state::ConfirmKind::Conflict { .. } => " Overwrite? ",
+            mx_core::state::ConfirmKind::QuitWithWorkers => " Quit? ",
         },
         Modal::Op(d) => match d.kind {
             mx_core::state::OpKind::Copy { .. } => " Copy ",
@@ -549,17 +546,29 @@ fn modal_buttons(modal: &Modal) -> Vec<ButtonSpec> {
             })
             .collect(),
         Modal::QuitConfirm => vec![
-            ButtonSpec { label: "Yes", focused: false },
-            ButtonSpec { label: "No",  focused: true },
+            ButtonSpec {
+                label: "Yes",
+                focused: false,
+            },
+            ButtonSpec {
+                label: "No",
+                focused: true,
+            },
         ],
-        Modal::Error(_) => vec![ButtonSpec { label: "OK", focused: true }],
+        Modal::Error(_) => vec![ButtonSpec {
+            label: "OK",
+            focused: true,
+        }],
         // Help / Input / Progress / Viewer use their own footer hint text;
         // no separate button strip.
         _ => Vec::new(),
     }
 }
 
-fn button_row<'a>(theme: &mx_core::theme::Theme, buttons: &[ButtonSpec]) -> ratatui::text::Line<'a> {
+fn button_row<'a>(
+    theme: &mx_core::theme::Theme,
+    buttons: &[ButtonSpec],
+) -> ratatui::text::Line<'a> {
     use ratatui::style::{Modifier, Style};
     use ratatui::text::Span;
     let mut spans: Vec<Span<'a>> = Vec::with_capacity(buttons.len() * 2);
@@ -724,7 +733,11 @@ fn render_confirm_body(d: &mx_core::state::ConfirmDialog) -> String {
     d.body.clone()
 }
 
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss
+)]
 fn render_progress_body(d: &mx_core::state::ProgressDialog, area: Rect) -> String {
     use std::fmt::Write as _;
     let mut out = String::new();
