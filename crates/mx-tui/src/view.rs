@@ -405,6 +405,7 @@ fn render_hint(frame: &mut Frame<'_>, area: Rect, state: &State) {
     let _ = state; // reserved for context-sensitive hints in Phase 2
 }
 
+#[allow(clippy::too_many_lines)] // single chrome routine; splitting hurts readability
 fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
     use ratatui::style::Modifier;
     use ratatui::widgets::Padding;
@@ -502,14 +503,20 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
         height: actual_body_h,
     };
     let center_body = matches!(modal, Modal::Confirm(_) | Modal::QuitConfirm);
-    let body = body_text(modal, body_area, &state.config.keymap);
-    let p = Paragraph::new(body).style(chrome);
-    let p = if center_body {
-        p.alignment(Alignment::Center)
-    } else {
-        p
-    };
-    frame.render_widget(p, body_area);
+    match modal {
+        Modal::Op(d) => render_op_widget(frame, body_area, d, chrome),
+        Modal::Input(d) => render_input_widget(frame, body_area, d, chrome),
+        _ => {
+            let body = body_text(modal, body_area, &state.config.keymap);
+            let p = Paragraph::new(body).style(chrome);
+            let p = if center_body {
+                p.alignment(Alignment::Center)
+            } else {
+                p
+            };
+            frame.render_widget(p, body_area);
+        }
+    }
 
     if !buttons.is_empty() {
         let row = Rect {
@@ -581,10 +588,13 @@ fn body_text(modal: &Modal, area: Rect, keymap: &mx_core::keymap::Keymap) -> Str
         Modal::QuitConfirm => "Workers are still running.\nQuit anyway?".to_string(),
         Modal::Error(d) => render_error_body(d),
         Modal::Confirm(d) => render_confirm_body(d),
-        Modal::Input(d) => render_input_body(d),
+        Modal::Input(_) | Modal::Op(_) => {
+            // Rendered as bespoke widgets in render_modal so the input
+            // field can have its own background.
+            String::new()
+        }
         Modal::Progress(d) => render_progress_body(d, area),
         Modal::Viewer(d) => render_viewer_body(d, area),
-        Modal::Op(d) => render_op_body(d),
     }
 }
 
@@ -626,6 +636,16 @@ fn modal_buttons(modal: &Modal) -> Vec<ButtonSpec> {
                 focused: matches!(d.focus, OpFocus::Button(idx) if idx == i),
             })
             .collect(),
+        Modal::Input(_) => vec![
+            ButtonSpec {
+                label: "OK",
+                focused: true,
+            },
+            ButtonSpec {
+                label: "Cancel",
+                focused: false,
+            },
+        ],
         Modal::QuitConfirm => vec![
             ButtonSpec {
                 label: "Yes",
@@ -860,41 +880,110 @@ fn render_error_body(d: &mx_core::state::ErrorDialog) -> String {
     out
 }
 
-fn render_op_body(d: &mx_core::state::OpDialog) -> String {
-    use mx_core::state::OpFocus;
-    let mut out = String::new();
-    out.push_str(&d.prompt);
-    out.push('\n');
-    // Path field: bracket the field on both sides; show inline `▏` cursor
-    // when focused so the user always sees where editing happens.
-    let cursor = d.cursor.min(d.target.len());
-    out.push('[');
-    if matches!(d.focus, OpFocus::Path) {
-        out.push_str(&d.target[..cursor]);
-        out.push('▏');
-        out.push_str(&d.target[cursor..]);
-    } else {
-        out.push_str(&d.target);
-    }
-    out.push(']');
-    out
+fn input_field_style() -> ratatui::style::Style {
+    use ratatui::style::{Color as RColor, Style};
+    Style::default()
+        .bg(RColor::Rgb(0x00, 0x55, 0x77))
+        .fg(RColor::Rgb(0xff, 0xff, 0xff))
 }
 
-fn render_input_body(d: &mx_core::state::InputDialog) -> String {
-    let mut out = String::new();
-    if !d.title.is_empty() {
-        out.push_str(&d.title);
-        out.push('\n');
-        out.push('\n');
+fn render_op_widget(
+    frame: &mut Frame<'_>,
+    area: Rect,
+    d: &mx_core::state::OpDialog,
+    chrome: ratatui::style::Style,
+) {
+    use mx_core::state::OpFocus;
+    use ratatui::text::{Line, Span};
+    if area.height < 2 {
+        return;
     }
-    out.push_str(&d.prompt);
-    out.push('\n');
+    // Row 0: prompt
+    let prompt_area = Rect {
+        x: area.x,
+        y: area.y,
+        width: area.width,
+        height: 1,
+    };
+    frame.render_widget(Paragraph::new(d.prompt.as_str()).style(chrome), prompt_area);
+
+    // Row 1: input field — full-width band with the input bg, target text
+    // inside, plus `▏` cursor when focused.
+    let field_style = input_field_style();
+    let cursor = d.cursor.min(d.target.len());
+    let mut spans: Vec<Span> = Vec::new();
+    if matches!(d.focus, OpFocus::Path) {
+        spans.push(Span::styled(d.target[..cursor].to_string(), field_style));
+        spans.push(Span::styled("▏", field_style));
+        spans.push(Span::styled(d.target[cursor..].to_string(), field_style));
+    } else {
+        spans.push(Span::styled(d.target.clone(), field_style));
+    }
+    // Pad to full width so the band fills the row.
+    let used: usize = spans.iter().map(|s| s.content.chars().count()).sum();
+    let pad = (area.width as usize).saturating_sub(used);
+    if pad > 0 {
+        spans.push(Span::styled(" ".repeat(pad), field_style));
+    }
+    let field_area = Rect {
+        x: area.x,
+        y: area.y + 1,
+        width: area.width,
+        height: 1,
+    };
+    frame.render_widget(
+        Paragraph::new(Line::from(spans)).style(field_style),
+        field_area,
+    );
+}
+
+fn render_input_widget(
+    frame: &mut Frame<'_>,
+    area: Rect,
+    d: &mx_core::state::InputDialog,
+    chrome: ratatui::style::Style,
+) {
+    use ratatui::text::{Line, Span};
+    if area.height < 2 {
+        return;
+    }
+    // Title (if any) + prompt above the field.
+    let mut header = String::new();
+    if !d.title.is_empty() && !d.prompt.is_empty() {
+        header.push_str(&d.prompt);
+    } else if !d.title.is_empty() {
+        header.push_str(&d.title);
+    } else {
+        header.push_str(&d.prompt);
+    }
+    let prompt_area = Rect {
+        x: area.x,
+        y: area.y,
+        width: area.width,
+        height: 1,
+    };
+    frame.render_widget(Paragraph::new(header).style(chrome), prompt_area);
+
+    // Input field band.
+    let field_style = input_field_style();
     let cursor = d.cursor.min(d.value.len());
-    out.push_str("> ");
-    out.push_str(&d.value[..cursor]);
-    out.push('▏');
-    out.push_str(&d.value[cursor..]);
-    out.push_str("\n\n");
-    out.push_str(" Enter = OK   Esc = Cancel ");
-    out
+    let mut spans: Vec<Span> = Vec::new();
+    spans.push(Span::styled(d.value[..cursor].to_string(), field_style));
+    spans.push(Span::styled("▏", field_style));
+    spans.push(Span::styled(d.value[cursor..].to_string(), field_style));
+    let used: usize = spans.iter().map(|s| s.content.chars().count()).sum();
+    let pad = (area.width as usize).saturating_sub(used);
+    if pad > 0 {
+        spans.push(Span::styled(" ".repeat(pad), field_style));
+    }
+    let field_area = Rect {
+        x: area.x,
+        y: area.y + 1,
+        width: area.width,
+        height: 1,
+    };
+    frame.render_widget(
+        Paragraph::new(Line::from(spans)).style(field_style),
+        field_area,
+    );
 }

@@ -811,15 +811,11 @@ fn resolve_op(state: &mut State) -> Vec<Command> {
     let Some(Modal::Op(d)) = state.modal.take() else {
         return Vec::new();
     };
-    // Path-focus + Enter: just advance to first button.
-    if matches!(d.focus, OpFocus::Path) {
-        let mut d = d;
-        d.focus = OpFocus::Button(0);
-        state.modal = Some(Modal::Op(d));
-        return Vec::new();
-    }
-    let OpFocus::Button(idx) = d.focus else {
-        return Vec::new();
+    // Path-focus + Enter fires the default (first) button — same as if the
+    // user had Tab'd to it and hit Enter.
+    let idx = match d.focus {
+        OpFocus::Path => 0,
+        OpFocus::Button(i) => i,
     };
     let button = d.buttons.get(idx).copied();
     // Non-action buttons (Cancel) close the modal without emitting a Command.
@@ -831,7 +827,8 @@ fn resolve_op(state: &mut State) -> Vec<Command> {
     }
     let dst = camino::Utf8PathBuf::from(d.target.trim());
     if dst.as_str().is_empty() {
-        // Empty target: re-open the modal with focus back on the path.
+        // Empty target: re-open the modal with focus back on the path so
+        // the user can type one in.
         let mut d = d;
         d.focus = OpFocus::Path;
         state.modal = Some(Modal::Op(d));
