@@ -112,9 +112,15 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
         frame.render_widget(p, row_area);
     }
 
-    // Body uses one row less to make room for the header.
-    let body_y = inner.y + 1;
-    let visible_h = inner.height.saturating_sub(1) as usize;
+    // Body sits between the header and a per-panel footer (focused-entry
+    // detail). When the panel is too short to fit divider+footer, the
+    // footer is dropped and the body grows to use that space instead.
+    let want_footer = inner.height >= 4;
+    let header_h: u16 = 1;
+    let footer_h: u16 = u16::from(want_footer);
+    let divider_h: u16 = u16::from(want_footer);
+    let body_y = inner.y + header_h;
+    let visible_h = inner.height.saturating_sub(header_h + divider_h + footer_h) as usize;
     let scroll = clamp_scroll(panel.scroll, panel.cursor, visible_h, panel.entries.len());
 
     for row in 0..visible_h {
@@ -159,7 +165,7 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
         text.push_str(&name_render);
         if show_size {
             text.push(' '); // separator slot — drawn by overlay
-            text.push_str(&mx_fs::format::format_size(entry.size));
+            text.push_str(&size_cell(entry));
         }
         if show_mtime {
             text.push(' ');
@@ -180,6 +186,45 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
         frame.render_widget(p, row_area);
     }
 
+    // Inner divider + per-panel footer (focused-entry detail). Drawn before
+    // the column-separator overlay so the overlay's `┴` caps land cleanly.
+    if want_footer {
+        let divider_y = inner.y + inner.height - 2;
+        let footer_y = inner.y + inner.height - 1;
+
+        // Horizontal divider in border style.
+        let divider: String = "─".repeat(inner.width as usize);
+        let p = Paragraph::new(divider).style(border_style);
+        let row_area = Rect {
+            x: inner.x,
+            y: divider_y,
+            width: inner.width,
+            height: 1,
+        };
+        frame.render_widget(p, row_area);
+
+        // Footer with focused entry's full info.
+        let footer_text = panel
+            .entries
+            .get(panel.cursor)
+            .map(|e| {
+                format_footer(
+                    e,
+                    inner.width as usize,
+                    &state.config.ui.date_format,
+                )
+            })
+            .unwrap_or_default();
+        let p = Paragraph::new(footer_text).style(frame_style(theme));
+        let row_area = Rect {
+            x: inner.x,
+            y: footer_y,
+            width: inner.width,
+            height: 1,
+        };
+        frame.render_widget(p, row_area);
+    }
+
     // Vertical column separators — overlay them now so they sit cleanly on
     // top of the header / body, and connect to the panel border with caps.
     // Use a clean style that *clears* any reverse-video / bold the cursor
@@ -193,31 +238,87 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
     if show_mtime {
         sep_xs.push((inner_x + 1 + name_w + 1 + size_w) as u16);
     }
-    let bottom_y = area.y + area.height.saturating_sub(1);
+    // Where vertical separators end. With a footer the separators stop at
+    // the divider row (single-line `┴` cap). Without a footer they extend
+    // through the bottom border (`╧` cap on the double border).
+    let sep_end_y = if want_footer {
+        inner.y + inner.height - 2 // divider row
+    } else {
+        area.y + area.height - 1 // bottom border
+    };
     for x in sep_xs {
-        // Top cap — only replace if it's plain border `═`, never overwrite
-        // the cwd title that ratatui paints over the top border.
+        // Top cap — only replace plain border `═`, never the cwd title.
         if let Some(cell) = frame.buffer_mut().cell_mut((x, area.y)) {
             if cell.symbol() == "═" {
                 cell.set_symbol("╤"); // single-column meeting double horizontal
                 cell.set_style(sep_style);
             }
         }
-        // Bottom cap — same guard.
-        if let Some(cell) = frame.buffer_mut().cell_mut((x, bottom_y)) {
-            if cell.symbol() == "═" {
-                cell.set_symbol("╧");
-                cell.set_style(sep_style);
-            }
+        // Bottom cap of the separator.
+        if let Some(cell) = frame.buffer_mut().cell_mut((x, sep_end_y)) {
+            let prev = cell.symbol().to_string();
+            let new = match prev.as_str() {
+                "─" => "┴", // landing on single-line divider
+                "═" => "╧", // landing on double-line bottom border
+                _ => prev.as_str(),
+            };
+            cell.set_symbol(new);
+            cell.set_style(sep_style);
         }
-        // Vertical line through every inner row.
-        for y in inner.y..inner.y + inner.height {
+        // Vertical line from header through body (and divider, if no footer).
+        for y in inner.y..sep_end_y {
             if let Some(cell) = frame.buffer_mut().cell_mut((x, y)) {
                 cell.set_symbol("│");
                 cell.set_style(sep_style);
             }
         }
     }
+}
+
+fn size_cell(entry: &mx_core::state::DirEntry) -> String {
+    use mx_core::state::EntryKind;
+    if entry.name == ".." {
+        " < Up >".to_string() // 7 chars
+    } else if entry.kind == EntryKind::Dir {
+        "  <Dir>".to_string() // 7 chars
+    } else {
+        mx_fs::format::format_size(entry.size)
+    }
+}
+
+fn format_footer(entry: &mx_core::state::DirEntry, width: usize, date_fmt: &str) -> String {
+    use mx_core::state::EntryKind;
+    let size_str = match entry.kind {
+        EntryKind::Dir if entry.name == ".." => "  <Up>".to_string(),
+        EntryKind::Dir => "  <Dir>".to_string(),
+        _ => mx_fs::format::format_size(entry.size).trim_start().to_string(),
+    };
+    let mtime_str = if entry.mtime.is_some() {
+        crate::format::format_mtime(entry.mtime, date_fmt)
+    } else {
+        String::new()
+    };
+
+    // Right side: " <size>  <mtime> "
+    let right = if mtime_str.is_empty() {
+        format!(" {size_str} ")
+    } else {
+        format!(" {size_str}  {mtime_str} ")
+    };
+    let right_w = right.chars().count();
+
+    // Left side: " <name>"
+    let mut left = String::with_capacity(width);
+    left.push(' ');
+    let name_room = width.saturating_sub(right_w + 1);
+    left.push_str(&render_name(&entry.name, name_room));
+
+    let mut out = left;
+    out.push_str(&right);
+    if out.chars().count() > width {
+        out = out.chars().take(width).collect();
+    }
+    out
 }
 
 fn render_center(text: &str, width: usize) -> String {
