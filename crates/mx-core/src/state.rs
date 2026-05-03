@@ -212,6 +212,12 @@ pub enum ConfirmButton {
     NoAll,
     Cancel,
     Ok,
+    /// Far-style destructive action (renders as "Delete").
+    Delete,
+    /// Far-style action button for copy/move dialogs.
+    Copy,
+    /// Far-style action button for copy/move dialogs.
+    Move,
 }
 
 /// What the calling code wants to do with the confirm result.

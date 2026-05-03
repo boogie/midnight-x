@@ -570,15 +570,18 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
                 return Vec::new();
             }
             let body = if paths.len() == 1 {
-                format!("Delete {}?", paths[0])
+                let name = paths[0]
+                    .file_name()
+                    .map_or_else(|| paths[0].to_string(), str::to_string);
+                format!("Do you wish to delete the file\n{name}")
             } else {
-                format!("Delete {} items?", paths.len())
+                format!("Do you wish to delete {} items", paths.len())
             };
             state.modal = Some(Modal::Confirm(ConfirmDialog {
-                title: "Confirm delete".into(),
+                title: "Delete".into(),
                 body,
-                buttons: vec![ConfirmButton::No, ConfirmButton::Yes],
-                focused: 0, // Default to "No" for destructive ops.
+                buttons: vec![ConfirmButton::Delete, ConfirmButton::Cancel],
+                focused: 0, // Far-faithful: default focus on the destructive action.
                 kind: ConfirmKind::Delete { paths },
             }));
         }
@@ -604,9 +607,9 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
                 format!("Copy {} items to {}?", src.len(), dst)
             };
             state.modal = Some(Modal::Confirm(ConfirmDialog {
-                title: "Confirm copy".into(),
+                title: "Copy".into(),
                 body,
-                buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
+                buttons: vec![ConfirmButton::Copy, ConfirmButton::Cancel],
                 focused: 0,
                 kind: ConfirmKind::StartCopy { src, dst },
             }));
@@ -633,9 +636,9 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
                 format!("Move {} items to {}?", src.len(), dst)
             };
             state.modal = Some(Modal::Confirm(ConfirmDialog {
-                title: "Confirm move".into(),
+                title: "Move".into(),
                 body,
-                buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
+                buttons: vec![ConfirmButton::Move, ConfirmButton::Cancel],
                 focused: 0,
                 kind: ConfirmKind::StartMove { src, dst },
             }));
@@ -812,15 +815,17 @@ fn resolve_confirm(state: &mut State) -> Vec<Command> {
     };
     let button = d.buttons.get(d.focused).copied();
     match (d.kind, button) {
-        (ConfirmKind::Delete { paths }, Some(ConfirmButton::Yes)) => {
+        (ConfirmKind::Delete { paths }, Some(ConfirmButton::Yes | ConfirmButton::Delete)) => {
             vec![Command::StartDelete { paths }]
         }
-        (ConfirmKind::StartCopy { src, dst }, Some(ConfirmButton::Yes)) => {
-            vec![Command::StartCopy { src, dst }]
-        }
-        (ConfirmKind::StartMove { src, dst }, Some(ConfirmButton::Yes)) => {
-            vec![Command::StartMove { src, dst }]
-        }
+        (
+            ConfirmKind::StartCopy { src, dst },
+            Some(ConfirmButton::Yes | ConfirmButton::Copy),
+        ) => vec![Command::StartCopy { src, dst }],
+        (
+            ConfirmKind::StartMove { src, dst },
+            Some(ConfirmButton::Yes | ConfirmButton::Move),
+        ) => vec![Command::StartMove { src, dst }],
         (ConfirmKind::Conflict { worker }, Some(b)) => {
             let policy = match b {
                 ConfirmButton::Yes => P::Yes,
@@ -828,6 +833,7 @@ fn resolve_confirm(state: &mut State) -> Vec<Command> {
                 ConfirmButton::YesAll => P::YesAll,
                 ConfirmButton::NoAll => P::NoAll,
                 ConfirmButton::Cancel | ConfirmButton::Ok => P::Cancel,
+                ConfirmButton::Delete | ConfirmButton::Copy | ConfirmButton::Move => P::Cancel,
             };
             vec![Command::ResolveConflict(worker, policy)]
         }

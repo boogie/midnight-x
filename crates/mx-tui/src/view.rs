@@ -418,7 +418,13 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
     let title = match modal {
         Modal::Help => " Help ",
         Modal::QuitConfirm => " Quit? ",
-        Modal::Confirm(_) => " Confirm ",
+        Modal::Confirm(d) => match d.kind {
+            mx_core::state::ConfirmKind::Delete { .. }    => " Delete ",
+            mx_core::state::ConfirmKind::StartCopy { .. } => " Copy ",
+            mx_core::state::ConfirmKind::StartMove { .. } => " Move ",
+            mx_core::state::ConfirmKind::Conflict { .. }  => " Overwrite? ",
+            mx_core::state::ConfirmKind::QuitWithWorkers  => " Quit? ",
+        },
         Modal::Input(_) => " Input ",
         Modal::Progress(_) => " Working… ",
         Modal::Error(_) => " Error ",
@@ -601,6 +607,9 @@ fn render_confirm_body(d: &mx_core::state::ConfirmDialog) -> String {
             mx_core::state::ConfirmButton::NoAll => "No-All",
             mx_core::state::ConfirmButton::Cancel => "Cancel",
             mx_core::state::ConfirmButton::Ok => "OK",
+            mx_core::state::ConfirmButton::Delete => "Delete",
+            mx_core::state::ConfirmButton::Copy => "Copy",
+            mx_core::state::ConfirmButton::Move => "Move",
         };
         if i > 0 {
             out.push_str("  ");
