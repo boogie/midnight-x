@@ -9,21 +9,21 @@ expression: buffer_snapshot(&buf)
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
-║                   ┌ Delete ──────────────────────────────────────────────────┐                   ║
-║                   │Confirm delete                                            │                   ║
+║                   ╭───────────────────────── Delete ─────────────────────────╮                   ║
 ║                   │                                                          │                   ║
-║                   │Delete /tmp/x.txt?                                        │                   ║
+║                   │                    Delete /tmp/x.txt?                    │                   ║
 ║                   │                                                          │                   ║
-║                   │>No<   Yes                                                │                   ║
+║                   │                                                          │                   ║
+║                   │                                                          │                   ║
 ║(empty)            │                                                          │                   ║
 ║                   │                                                          │                   ║
 ║                   │                                                          │                   ║
 ║                   │                                                          │                   ║
 ║                   │                                                          │                   ║
 ║                   │                                                          │                   ║
+║                   │                        No     Yes                        │                   ║
 ║                   │                                                          │                   ║
-║                   │                                                          │                   ║
-║                   └──────────────────────────────────────────────────────────┘                   ║
+║                   ╰──────────────────────────────────────────────────────────╯                   ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
@@ -779,14 +779,14 @@ expression: buffer_snapshot(&buf)
 (43,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (44,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (45,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(46,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(47,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(48,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(49,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(50,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(51,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(52,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(53,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
+(46,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(47,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(48,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(49,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(50,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(51,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(52,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(53,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
 (54,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (55,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (56,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
@@ -1977,10 +1977,10 @@ expression: buffer_snapshot(&buf)
 (41,19) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (42,19) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (43,19) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(44,19) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(45,19) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(46,19) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(47,19) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
+(44,19) Style { fg: Some(Rgb(0, 0, 119)), bg: Some(Rgb(255, 255, 85)), add_modifier: BOLD, sub_modifier: NONE }
+(45,19) Style { fg: Some(Rgb(0, 0, 119)), bg: Some(Rgb(255, 255, 85)), add_modifier: BOLD, sub_modifier: NONE }
+(46,19) Style { fg: Some(Rgb(0, 0, 119)), bg: Some(Rgb(255, 255, 85)), add_modifier: BOLD, sub_modifier: NONE }
+(47,19) Style { fg: Some(Rgb(0, 0, 119)), bg: Some(Rgb(255, 255, 85)), add_modifier: BOLD, sub_modifier: NONE }
 (48,19) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (49,19) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (50,19) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }

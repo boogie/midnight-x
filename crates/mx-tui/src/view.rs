@@ -409,13 +409,74 @@ fn render_hint(frame: &mut Frame<'_>, area: Rect, state: &State) {
 }
 
 fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
+    use ratatui::style::Modifier;
+    use ratatui::widgets::Padding;
+
     let theme = &state.config.theme;
     let modal = state
         .modal
         .as_ref()
         .expect("render_modal called without a modal");
     frame.render_widget(Clear, area);
-    let title = match modal {
+
+    let title = modal_title(modal);
+    let mstyle = modal_style(theme);
+
+    // Outer block: rounded single-line border, internal 2-col + 1-row
+    // padding, centred bold title on the top border.
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .title(title)
+        .title_alignment(Alignment::Center)
+        .title_style(mstyle.add_modifier(Modifier::BOLD))
+        .style(mstyle)
+        .padding(Padding::new(2, 2, 1, 1));
+    let inner = block.inner(area);
+    frame.render_widget(block, area);
+
+    // Reserve last row of the inner area for the button strip when the
+    // modal owns buttons. A 1-row gap separates body from buttons.
+    let buttons = modal_buttons(modal);
+    let body_h = if buttons.is_empty() {
+        inner.height
+    } else {
+        inner.height.saturating_sub(2)
+    };
+    let body_area = Rect {
+        x: inner.x,
+        y: inner.y,
+        width: inner.width,
+        height: body_h,
+    };
+
+    let center_body = matches!(modal, Modal::Confirm(_) | Modal::QuitConfirm);
+    let body = body_text(modal, body_area, &state.config.keymap);
+    let p = Paragraph::new(body).style(mstyle);
+    let p = if center_body {
+        p.alignment(Alignment::Center)
+    } else {
+        p
+    };
+    frame.render_widget(p, body_area);
+
+    if !buttons.is_empty() {
+        let row = Rect {
+            x: inner.x,
+            y: inner.y + body_h + 1, // 1-row gap below body
+            width: inner.width,
+            height: 1,
+        };
+        let line = button_row(theme, &buttons);
+        let p = Paragraph::new(line)
+            .style(mstyle)
+            .alignment(Alignment::Center);
+        frame.render_widget(p, row);
+    }
+}
+
+fn modal_title(modal: &Modal) -> &'static str {
+    match modal {
         Modal::Help => " Help ",
         Modal::QuitConfirm => " Quit? ",
         Modal::Confirm(d) => match d.kind {
@@ -425,41 +486,101 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
             mx_core::state::ConfirmKind::Conflict { .. }  => " Overwrite? ",
             mx_core::state::ConfirmKind::QuitWithWorkers  => " Quit? ",
         },
-        Modal::Op(d) => {
-            // Borrow as &str then leak into a static slot via match-by-reference;
-            // since the title is short and bounded, return a `&'static str`.
-            match d.kind {
-                mx_core::state::OpKind::Copy { .. } => " Copy ",
-                mx_core::state::OpKind::Move { .. } => " Move ",
-            }
-        }
+        Modal::Op(d) => match d.kind {
+            mx_core::state::OpKind::Copy { .. } => " Copy ",
+            mx_core::state::OpKind::Move { .. } => " Move ",
+        },
         Modal::Input(_) => " Input ",
         Modal::Progress(_) => " Working… ",
         Modal::Error(_) => " Error ",
         Modal::Viewer(_) => " View (Esc/F3 close, ↑↓ scroll) ",
-    };
-    let body = match modal {
-        Modal::Help => render_help_body(&state.config.keymap),
-        Modal::QuitConfirm => {
-            "Workers are still running. Quit anyway?\n\n[ Yes ]   [ No ]".to_string()
-        }
+    }
+}
+
+fn body_text(modal: &Modal, area: Rect, keymap: &mx_core::keymap::Keymap) -> String {
+    match modal {
+        Modal::Help => render_help_body(keymap),
+        Modal::QuitConfirm => "Workers are still running.\nQuit anyway?".to_string(),
         Modal::Error(d) => render_error_body(d),
         Modal::Confirm(d) => render_confirm_body(d),
         Modal::Input(d) => render_input_body(d),
         Modal::Progress(d) => render_progress_body(d, area),
         Modal::Viewer(d) => render_viewer_body(d, area),
         Modal::Op(d) => render_op_body(d),
+    }
+}
+
+#[derive(Clone, Copy)]
+struct ButtonSpec {
+    label: &'static str,
+    focused: bool,
+}
+
+fn modal_buttons(modal: &Modal) -> Vec<ButtonSpec> {
+    use mx_core::state::{ConfirmButton, OpFocus};
+    let label = |b: ConfirmButton| match b {
+        ConfirmButton::Yes => "Yes",
+        ConfirmButton::No => "No",
+        ConfirmButton::YesAll => "Yes-All",
+        ConfirmButton::NoAll => "No-All",
+        ConfirmButton::Cancel => "Cancel",
+        ConfirmButton::Ok => "OK",
+        ConfirmButton::Delete => "Delete",
+        ConfirmButton::Copy => "Copy",
+        ConfirmButton::Move => "Move",
     };
-    let p = Paragraph::new(body)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(title)
-                .style(modal_style(theme))
-                .title_style(modal_style(theme)),
-        )
-        .style(modal_style(theme));
-    frame.render_widget(p, area);
+    match modal {
+        Modal::Confirm(d) => d
+            .buttons
+            .iter()
+            .enumerate()
+            .map(|(i, b)| ButtonSpec {
+                label: label(*b),
+                focused: i == d.focused,
+            })
+            .collect(),
+        Modal::Op(d) => d
+            .buttons
+            .iter()
+            .enumerate()
+            .map(|(i, b)| ButtonSpec {
+                label: label(*b),
+                focused: matches!(d.focus, OpFocus::Button(idx) if idx == i),
+            })
+            .collect(),
+        Modal::QuitConfirm => vec![
+            ButtonSpec { label: "Yes", focused: false },
+            ButtonSpec { label: "No",  focused: true },
+        ],
+        Modal::Error(_) => vec![ButtonSpec { label: "OK", focused: true }],
+        // Help / Input / Progress / Viewer use their own footer hint text;
+        // no separate button strip.
+        _ => Vec::new(),
+    }
+}
+
+fn button_row<'a>(theme: &mx_core::theme::Theme, buttons: &[ButtonSpec]) -> ratatui::text::Line<'a> {
+    use ratatui::style::{Modifier, Style};
+    use ratatui::text::Span;
+    let mut spans: Vec<Span<'a>> = Vec::with_capacity(buttons.len() * 2);
+    for (i, b) in buttons.iter().enumerate() {
+        if i > 0 {
+            spans.push(Span::raw("   "));
+        }
+        let label = format!(" {} ", b.label);
+        let style = if b.focused {
+            Style::default()
+                .bg(crate::theme_styles::rcolor(theme.accent))
+                .fg(crate::theme_styles::rcolor(theme.modal_bg))
+                .add_modifier(Modifier::BOLD)
+        } else {
+            Style::default()
+                .bg(crate::theme_styles::rcolor(theme.modal_bg))
+                .fg(crate::theme_styles::rcolor(theme.modal_fg))
+        };
+        spans.push(Span::styled(label, style));
+    }
+    ratatui::text::Line::from(spans)
 }
 
 fn render_viewer_body(d: &mx_core::state::ViewerDialog, area: Rect) -> String {
@@ -599,37 +720,8 @@ fn command_label(c: mx_core::command::CommandId) -> &'static str {
 }
 
 fn render_confirm_body(d: &mx_core::state::ConfirmDialog) -> String {
-    use std::fmt::Write as _;
-    let mut out = String::new();
-    if !d.title.is_empty() {
-        out.push_str(&d.title);
-        out.push('\n');
-        out.push('\n');
-    }
-    out.push_str(&d.body);
-    out.push_str("\n\n");
-    for (i, b) in d.buttons.iter().enumerate() {
-        let label = match b {
-            mx_core::state::ConfirmButton::Yes => "Yes",
-            mx_core::state::ConfirmButton::No => "No",
-            mx_core::state::ConfirmButton::YesAll => "Yes-All",
-            mx_core::state::ConfirmButton::NoAll => "No-All",
-            mx_core::state::ConfirmButton::Cancel => "Cancel",
-            mx_core::state::ConfirmButton::Ok => "OK",
-            mx_core::state::ConfirmButton::Delete => "Delete",
-            mx_core::state::ConfirmButton::Copy => "Copy",
-            mx_core::state::ConfirmButton::Move => "Move",
-        };
-        if i > 0 {
-            out.push_str("  ");
-        }
-        if i == d.focused {
-            let _ = write!(out, ">{label}<");
-        } else {
-            let _ = write!(out, " {label} ");
-        }
-    }
-    out
+    // Buttons are rendered separately by the modal renderer's button row.
+    d.body.clone()
 }
 
 #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss)]
@@ -664,59 +756,33 @@ fn render_error_body(d: &mx_core::state::ErrorDialog) -> String {
     let mut out = String::new();
     out.push_str(&d.body);
     if !d.details.is_empty() {
-        out.push_str("\n\n");
-        out.push_str("Details:\n");
+        out.push_str("\n\nDetails:\n");
         for line in &d.details {
             out.push_str("  ");
             out.push_str(line);
             out.push('\n');
         }
     }
-    out.push_str("\n[ OK ]");
     out
 }
 
 fn render_op_body(d: &mx_core::state::OpDialog) -> String {
-    use std::fmt::Write as _;
-    use mx_core::state::{ConfirmButton, OpFocus};
+    use mx_core::state::OpFocus;
     let mut out = String::new();
     out.push_str(&d.prompt);
     out.push('\n');
-    // Path field: show inline `▏` cursor when focused; when unfocused
-    // wrap with `[` and `]` to indicate it's an editable field.
+    // Path field: bracket the field on both sides; show inline `▏` cursor
+    // when focused so the user always sees where editing happens.
     let cursor = d.cursor.min(d.target.len());
+    out.push('[');
     if matches!(d.focus, OpFocus::Path) {
-        out.push_str("> ");
         out.push_str(&d.target[..cursor]);
         out.push('▏');
         out.push_str(&d.target[cursor..]);
     } else {
-        out.push_str("  ");
         out.push_str(&d.target);
     }
-    out.push_str("\n\n");
-    for (i, b) in d.buttons.iter().enumerate() {
-        let label = match b {
-            ConfirmButton::Copy   => "Copy",
-            ConfirmButton::Move   => "Move",
-            ConfirmButton::Cancel => "Cancel",
-            ConfirmButton::Yes    => "Yes",
-            ConfirmButton::No     => "No",
-            ConfirmButton::YesAll => "Yes-All",
-            ConfirmButton::NoAll  => "No-All",
-            ConfirmButton::Ok     => "OK",
-            ConfirmButton::Delete => "Delete",
-        };
-        if i > 0 {
-            out.push_str("  ");
-        }
-        let is_focused = matches!(d.focus, OpFocus::Button(b_idx) if b_idx == i);
-        if is_focused {
-            let _ = write!(out, ">{label}<");
-        } else {
-            let _ = write!(out, " {label} ");
-        }
-    }
+    out.push(']');
     out
 }
 

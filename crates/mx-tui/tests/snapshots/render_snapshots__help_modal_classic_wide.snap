@@ -9,21 +9,21 @@ expression: buffer_snapshot(&buf)
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
-║                   ┌ Help ────────────────────────────────────────────────────┐                   ║
-║                   │Navigation                                                │                   ║
-║                   │  Move cursor up         up                               │                   ║
-║                   │  Move cursor down       down                             │                   ║
-║                   │  Page up                pgup                             │                   ║
-║                   │  Page down              pgdn                             │                   ║
-║(empty)            │  Top                    home                             │                   ║
-║                   │  Bottom                 end                              │                   ║
-║                   │  Enter directory        enter                            │                   ║
-║                   │  Parent directory       backspace                        │                   ║
-║                   │  Other panel            tab                              │                   ║
-║                   │  Swap panels            ctrl-u                           │                   ║
+║                   ╭────────────────────────── Help ──────────────────────────╮                   ║
 ║                   │                                                          │                   ║
-║                   │Selection                                                 │                   ║
-║                   └──────────────────────────────────────────────────────────┘                   ║
+║                   │  Navigation                                              │                   ║
+║                   │    Move cursor up         up                             │                   ║
+║                   │    Move cursor down       down                           │                   ║
+║                   │    Page up                pgup                           │                   ║
+║(empty)            │    Page down              pgdn                           │                   ║
+║                   │    Top                    home                           │                   ║
+║                   │    Bottom                 end                            │                   ║
+║                   │    Enter directory        enter                          │                   ║
+║                   │    Parent directory       backspace                      │                   ║
+║                   │    Other panel            tab                            │                   ║
+║                   │    Swap panels            ctrl-u                         │                   ║
+║                   │                                                          │                   ║
+║                   ╰──────────────────────────────────────────────────────────╯                   ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
@@ -780,12 +780,12 @@ expression: buffer_snapshot(&buf)
 (44,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (45,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (46,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(47,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(48,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(49,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(50,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(51,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(52,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
+(47,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(48,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(49,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(50,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(51,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(52,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
 (53,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (54,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (55,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }

@@ -9,11 +9,11 @@ expression: buffer_snapshot(&buf)
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
-║                   ┌ View (Esc/F3 close, ↑↓ scroll) ──────────────────────────┐                   ║
-║                   │line one                                                  │                   ║
-║                   │line two                                                  │                   ║
-║                   │line three                                                │                   ║
+║                   ╭───────────── View (Esc/F3 close, ↑↓ scroll) ─────────────╮                   ║
 ║                   │                                                          │                   ║
+║                   │  line one                                                │                   ║
+║                   │  line two                                                │                   ║
+║                   │  line three                                              │                   ║
 ║                   │                                                          │                   ║
 ║(empty)            │                                                          │                   ║
 ║                   │                                                          │                   ║
@@ -23,7 +23,7 @@ expression: buffer_snapshot(&buf)
 ║                   │                                                          │                   ║
 ║                   │                                                          │                   ║
 ║                   │                                                          │                   ║
-║                   └──────────────────────────────────────────────────────────┘                   ║
+║                   ╰──────────────────────────────────────────────────────────╯                   ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
@@ -767,38 +767,38 @@ expression: buffer_snapshot(&buf)
 (31,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (32,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (33,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(34,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(35,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(36,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(37,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(38,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(39,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(40,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(41,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(42,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(43,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(44,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(45,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(46,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(47,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(48,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(49,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(50,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(51,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(52,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(53,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(54,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(55,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(56,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(57,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(58,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(59,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(60,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(61,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(62,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(63,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(64,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(65,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
+(34,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(35,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(36,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(37,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(38,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(39,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(40,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(41,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(42,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(43,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(44,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(45,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(46,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(47,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(48,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(49,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(50,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(51,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(52,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(53,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(54,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(55,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(56,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(57,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(58,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(59,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(60,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(61,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(62,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(63,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(64,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(65,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
 (66,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (67,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (68,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }

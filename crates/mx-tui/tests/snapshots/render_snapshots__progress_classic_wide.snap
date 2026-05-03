@@ -9,12 +9,12 @@ expression: buffer_snapshot(&buf)
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
-║                   ┌ Working… ────────────────────────────────────────────────┐                   ║
-║                   │/tmp/big.bin                                              │                   ║
-║                   │[████████████████████████────────────────────────]  50%   │                   ║
+║                   ╭──────────────────────── Working… ────────────────────────╮                   ║
 ║                   │                                                          │                   ║
-║                   │ Esc / Ctrl-C = Cancel                                    │                   ║
+║                   │  /tmp/big.bin                                            │                   ║
+║                   │  [█████████████████████─────────────────────]  50%       │                   ║
 ║                   │                                                          │                   ║
+║                   │   Esc / Ctrl-C = Cancel                                  │                   ║
 ║(empty)            │                                                          │                   ║
 ║                   │                                                          │                   ║
 ║                   │                                                          │                   ║
@@ -23,7 +23,7 @@ expression: buffer_snapshot(&buf)
 ║                   │                                                          │                   ║
 ║                   │                                                          │                   ║
 ║                   │                                                          │                   ║
-║                   └──────────────────────────────────────────────────────────┘                   ║
+║                   ╰──────────────────────────────────────────────────────────╯                   ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
@@ -778,16 +778,16 @@ expression: buffer_snapshot(&buf)
 (42,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (43,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (44,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(45,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(46,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(47,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(48,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(49,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(50,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(51,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(52,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(53,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
-(54,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
+(45,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(46,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(47,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(48,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(49,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(50,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(51,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(52,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(53,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
+(54,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: BOLD, sub_modifier: NONE }
 (55,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (56,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
 (57,7) Style { fg: Some(Rgb(255, 255, 255)), bg: Some(Rgb(0, 0, 119)), add_modifier: NONE, sub_modifier: NONE }
