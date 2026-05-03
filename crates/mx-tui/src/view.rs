@@ -4,7 +4,7 @@
 use mx_core::state::{Modal, PanelSide, State};
 
 use ratatui::layout::{Alignment, Rect};
-use ratatui::widgets::{Block, Borders, Clear, Paragraph};
+use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
 use ratatui::Frame;
 
 use crate::layout::FrameLayout;
@@ -45,6 +45,7 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
     let border_style = panel_title_style(theme, focused);
     let block = Block::default()
         .borders(Borders::ALL)
+        .border_type(BorderType::Double)
         .border_style(border_style)
         .title(title)
         .title_alignment(Alignment::Center)
@@ -194,18 +195,18 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
     }
     let bottom_y = area.y + area.height.saturating_sub(1);
     for x in sep_xs {
-        // Top cap — only replace if it's plain border `─`, never overwrite
+        // Top cap — only replace if it's plain border `═`, never overwrite
         // the cwd title that ratatui paints over the top border.
         if let Some(cell) = frame.buffer_mut().cell_mut((x, area.y)) {
-            if cell.symbol() == "─" {
-                cell.set_symbol("┬");
+            if cell.symbol() == "═" {
+                cell.set_symbol("╤"); // single-column meeting double horizontal
                 cell.set_style(sep_style);
             }
         }
         // Bottom cap — same guard.
         if let Some(cell) = frame.buffer_mut().cell_mut((x, bottom_y)) {
-            if cell.symbol() == "─" {
-                cell.set_symbol("┴");
+            if cell.symbol() == "═" {
+                cell.set_symbol("╧");
                 cell.set_style(sep_style);
             }
         }

@@ -2,28 +2,28 @@
 source: crates/mx-tui/tests/render_snapshots.rs
 expression: buffer_snapshot(&buf)
 ---
-┌───────────────────────── ~/proj ┬───────┬────────────────┐
-│               Name              │ Size  │    Modified    │
-│ ..                              │       │                │
-│ src                             │       │                │
-│ target                          │       │                │
-│ Cargo.toml                      │ 1.21 K│                │
-│•README.md                       │ 4.22 K│                │
-│ rust-toolchain.toml             │     80│                │
-│ link-to-src                     │       │                │
-│                                 │       │                │
-│                                 │       │                │
-│                                 │       │                │
-│                                 │       │                │
-│                                 │       │                │
-│                                 │       │                │
-│                                 │       │                │
-│                                 │       │                │
-│                                 │       │                │
-│                                 │       │                │
-│                                 │       │                │
-│                                 │       │                │
-└─────────────────────────────────┴───────┴────────────────┘
+╔═════════════════════════ ~/proj ╤═══════╤════════════════╗
+║               Name              │ Size  │    Modified    ║
+║ ..                              │       │                ║
+║ src                             │       │                ║
+║ target                          │       │                ║
+║ Cargo.toml                      │ 1.21 K│                ║
+║•README.md                       │ 4.22 K│                ║
+║ rust-toolchain.toml             │     80│                ║
+║ link-to-src                     │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+║                                 │       │                ║
+╚═════════════════════════════════╧═══════╧════════════════╝
  4 files, 2 dirs, 5.50 K                                    
  F1 Help  F3 View  F5 Copy  F6 Move  F7 Mkdir  F8 Del  F10 Q
 ---

@@ -14,6 +14,11 @@ use crate::input::{InputEvent, KeyChord};
 use crate::keymap::Lookup;
 use crate::state::{Modal, PanelSide, State};
 
+/// Conservative guess at typical terminal viewport height (in rows). Used
+/// only by the post-`..` cursor centering heuristic; the renderer owns the
+/// real geometry. Larger than [`PAGE`](handle_command_no_modal) on purpose.
+const FOCUS_VIEWPORT_HINT: usize = 24;
+
 /// Pure transition. Takes ownership of `state`, returns the new state and any
 /// `Command`s the executor should run.
 #[must_use]
@@ -137,9 +142,16 @@ fn handle_worker_msg(state: &mut State, _id: crate::event::WorkerId, msg: crate:
             panel.entries = new_entries;
             panel.loading = false;
             // Honor any "land on this entry name" request, e.g. after `..`.
+            // When the entry is found, also center the viewport on it so the
+            // user gets context above and below — not the cursor jammed at
+            // the bottom of the list.
             if let Some(want) = panel.pending_focus_name.take() {
                 if let Some(idx) = panel.entries.iter().position(|e| e.name == want) {
                     panel.cursor = idx;
+                    // Renderer owns the actual viewport height; use a
+                    // conservative half-page heuristic so the focused entry
+                    // ends up roughly in the middle of typical terminals.
+                    panel.scroll = idx.saturating_sub(FOCUS_VIEWPORT_HINT / 2);
                 }
             }
             let last = panel.entries.len().saturating_sub(1);
