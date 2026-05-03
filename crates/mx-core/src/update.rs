@@ -171,6 +171,7 @@ fn handle_command(state: &mut State, id: CommandId, cmds: &mut Vec<Command>) {
     cmds.extend(dispatch(state, id));
 }
 
+#[allow(clippy::too_many_lines)] // single dispatch point; splitting hurts readability
 fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
     const PAGE: usize = 10;
     match id {
@@ -243,22 +244,81 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             return vec![Command::RescanDir(side)];
         }
 
-        // Phase 2 / 3 work below.
-        CommandId::ToggleSelect
-        | CommandId::SelectAll
-        | CommandId::SelectNone
-        | CommandId::InvertSelection
-        | CommandId::Copy
+        CommandId::ToggleHidden => {
+            let side = state.focus;
+            let new = !state.focused().show_hidden;
+            state.focused_mut().show_hidden = new;
+            return vec![Command::RescanDir(side)];
+        }
+        CommandId::CycleSort => {
+            use crate::state::SortMode;
+            let side = state.focus;
+            let panel = state.focused_mut();
+            panel.sort = match panel.sort {
+                SortMode::ByName => SortMode::BySize,
+                SortMode::BySize => SortMode::ByModified,
+                SortMode::ByModified => SortMode::ByName,
+            };
+            return vec![Command::RescanDir(side)];
+        }
+        CommandId::RescanFocused => {
+            let side = state.focus;
+            state.panels[side.index()].loading = true;
+            return vec![Command::RescanDir(side)];
+        }
+        CommandId::RescanBoth => {
+            state.panels[0].loading = true;
+            state.panels[1].loading = true;
+            return vec![
+                Command::RescanDir(PanelSide::Left),
+                Command::RescanDir(PanelSide::Right),
+            ];
+        }
+        CommandId::ToggleSelect => {
+            let panel = state.focused_mut();
+            if panel.entries.is_empty() {
+                return Vec::new();
+            }
+            let i = panel.cursor;
+            if panel.entries[i].name == ".." {
+                return Vec::new();
+            }
+            if !panel.selection.insert(i) {
+                panel.selection.remove(&i);
+            }
+        }
+        CommandId::SelectAll => {
+            let panel = state.focused_mut();
+            for (i, e) in panel.entries.iter().enumerate() {
+                if e.name != ".." {
+                    panel.selection.insert(i);
+                }
+            }
+        }
+        CommandId::SelectNone => {
+            state.focused_mut().selection.clear();
+        }
+        CommandId::InvertSelection => {
+            let panel = state.focused_mut();
+            let n = panel.entries.len();
+            for i in 0..n {
+                if panel.entries[i].name == ".." {
+                    continue;
+                }
+                if !panel.selection.insert(i) {
+                    panel.selection.remove(&i);
+                }
+            }
+        }
+
+        // Phase 3 work below.
+        CommandId::Copy
         | CommandId::Move
         | CommandId::Delete
         | CommandId::Mkdir
         | CommandId::Rename
-        | CommandId::View
-        | CommandId::ToggleHidden
-        | CommandId::CycleSort
-        | CommandId::RescanFocused
-        | CommandId::RescanBoth => {
-            // Implemented in later Phase 2 tasks.
+        | CommandId::View => {
+            // View is filled in by Task 14 (this Phase). Others are Phase 3.
         }
     }
     Vec::new()
@@ -521,6 +581,98 @@ mod tests {
         let (s, cmds) = update(s, Event::Command(CommandId::ParentDir));
         assert_eq!(s.panels[0].cwd, "/");
         assert!(cmds.is_empty());
+    }
+
+    #[test]
+    fn toggle_hidden_flips_flag_and_rescans() {
+        let s = st();
+        assert!(!s.panels[0].show_hidden);
+        let (s, cmds) = update(s, Event::Command(CommandId::ToggleHidden));
+        assert!(s.panels[0].show_hidden);
+        assert_eq!(cmds, vec![Command::RescanDir(PanelSide::Left)]);
+    }
+
+    #[test]
+    fn cycle_sort_rotates_and_rescans() {
+        use crate::state::SortMode;
+        let s = st();
+        let (s, cmds) = update(s, Event::Command(CommandId::CycleSort));
+        assert_eq!(s.panels[0].sort, SortMode::BySize);
+        assert_eq!(cmds, vec![Command::RescanDir(PanelSide::Left)]);
+        let (s, _) = update(s, Event::Command(CommandId::CycleSort));
+        assert_eq!(s.panels[0].sort, SortMode::ByModified);
+        let (s, _) = update(s, Event::Command(CommandId::CycleSort));
+        assert_eq!(s.panels[0].sort, SortMode::ByName);
+    }
+
+    #[test]
+    fn rescan_focused_emits_one_rescan_for_current_side() {
+        let s = st();
+        let (_, cmds) = update(s, Event::Command(CommandId::RescanFocused));
+        assert_eq!(cmds, vec![Command::RescanDir(PanelSide::Left)]);
+    }
+
+    #[test]
+    fn rescan_both_emits_two_rescans() {
+        let s = st();
+        let (_, cmds) = update(s, Event::Command(CommandId::RescanBoth));
+        assert_eq!(
+            cmds,
+            vec![
+                Command::RescanDir(PanelSide::Left),
+                Command::RescanDir(PanelSide::Right),
+            ],
+        );
+    }
+
+    #[test]
+    fn toggle_select_adds_then_removes_focused_row() {
+        let mut s = st_with_entries(5);
+        s.panels[0].cursor = 2;
+        let (s, _) = update(s, Event::Command(CommandId::ToggleSelect));
+        assert!(s.panels[0].selection.contains(&2));
+        let (s, _) = update(s, Event::Command(CommandId::ToggleSelect));
+        assert!(!s.panels[0].selection.contains(&2));
+    }
+
+    #[test]
+    fn select_all_skips_parent_dot_dot() {
+        let mut s = st();
+        s.panels[0].entries = vec![
+            crate::state::DirEntry::parent(),
+            crate::state::DirEntry::file("a", 1),
+            crate::state::DirEntry::file("b", 2),
+        ]
+        .into();
+        let (s, _) = update(s, Event::Command(CommandId::SelectAll));
+        assert!(!s.panels[0].selection.contains(&0));
+        assert!(s.panels[0].selection.contains(&1));
+        assert!(s.panels[0].selection.contains(&2));
+    }
+
+    #[test]
+    fn invert_selection_skips_parent_dot_dot() {
+        let mut s = st();
+        s.panels[0].entries = vec![
+            crate::state::DirEntry::parent(),
+            crate::state::DirEntry::file("a", 1),
+            crate::state::DirEntry::file("b", 2),
+        ]
+        .into();
+        s.panels[0].selection.insert(1);
+        let (s, _) = update(s, Event::Command(CommandId::InvertSelection));
+        assert!(!s.panels[0].selection.contains(&0));
+        assert!(!s.panels[0].selection.contains(&1));
+        assert!(s.panels[0].selection.contains(&2));
+    }
+
+    #[test]
+    fn select_none_clears() {
+        let mut s = st_with_entries(5);
+        s.panels[0].selection.insert(1);
+        s.panels[0].selection.insert(3);
+        let (s, _) = update(s, Event::Command(CommandId::SelectNone));
+        assert!(s.panels[0].selection.is_empty());
     }
 
     #[test]
