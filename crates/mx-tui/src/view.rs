@@ -42,11 +42,12 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
     let focused = state.focus == side;
 
     let title = format!(" {} ", panel.cwd);
+    let border_style = panel_title_style(theme, focused);
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(panel_title_style(theme, focused))
+        .border_style(border_style)
         .title(title)
-        .title_style(panel_title_style(theme, focused))
+        .title_style(border_style)
         .style(frame_style(theme));
 
     let inner = block.inner(area);
@@ -92,15 +93,14 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
         header.push(' '); // gutter
         header.push_str(&render_name("Name", name_w));
         if show_size {
-            header.push('│');
+            header.push(' '); // separator (drawn by overlay below)
             header.push_str(&render_right("Size", size_w));
         }
         if show_mtime {
-            header.push('│');
+            header.push(' ');
             header.push_str(&render_right("Modified", mtime_w));
         }
-        let style = panel_title_style(theme, focused);
-        let p = Paragraph::new(header).style(style);
+        let p = Paragraph::new(header).style(border_style);
         let row_area = Rect {
             x: inner.x,
             y: header_y,
@@ -156,11 +156,11 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
         text.push_str(gutter);
         text.push_str(&name_render);
         if show_size {
-            text.push('│');
+            text.push(' '); // separator slot — drawn by overlay
             text.push_str(&mx_fs::format::format_size(entry.size));
         }
         if show_mtime {
-            text.push('│');
+            text.push(' ');
             text.push_str(&crate::format::format_mtime(
                 entry.mtime,
                 &state.config.ui.date_format,
@@ -176,6 +176,37 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
             height: 1,
         };
         frame.render_widget(p, row_area);
+    }
+
+    // Vertical column separators — overlay them now so they sit cleanly on
+    // top of the header / body, and connect to the panel border with caps.
+    let inner_x = inner.x as usize;
+    let mut sep_xs: Vec<u16> = Vec::with_capacity(2);
+    if show_size {
+        sep_xs.push((inner_x + 1 + name_w) as u16);
+    }
+    if show_mtime {
+        sep_xs.push((inner_x + 1 + name_w + 1 + size_w) as u16);
+    }
+    for x in sep_xs {
+        // Top cap (replaces ─ on the top border).
+        if let Some(cell) = frame.buffer_mut().cell_mut((x, area.y)) {
+            cell.set_symbol("┬");
+            cell.set_style(border_style);
+        }
+        // Bottom cap (replaces ─ on the bottom border).
+        let bottom_y = area.y + area.height.saturating_sub(1);
+        if let Some(cell) = frame.buffer_mut().cell_mut((x, bottom_y)) {
+            cell.set_symbol("┴");
+            cell.set_style(border_style);
+        }
+        // Vertical line through every inner row.
+        for y in inner.y..inner.y + inner.height {
+            if let Some(cell) = frame.buffer_mut().cell_mut((x, y)) {
+                cell.set_symbol("│");
+                cell.set_style(border_style);
+            }
+        }
     }
 }
 
