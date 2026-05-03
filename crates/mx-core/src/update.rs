@@ -172,6 +172,7 @@ fn handle_command(state: &mut State, id: CommandId, cmds: &mut Vec<Command>) {
 }
 
 fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
+    const PAGE: usize = 10;
     match id {
         CommandId::Quit => {
             state.should_quit = true;
@@ -194,16 +195,25 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
         CommandId::SwapPanels => {
             state.panels.swap(0, 1);
         }
-        // All other CommandId variants are valid keymap targets but Phase 2
-        // is what wires them up. We exhaustively match so adding new variants
-        // is a compile error here.
-        CommandId::CursorUp
-        | CommandId::CursorDown
-        | CommandId::CursorPageUp
-        | CommandId::CursorPageDown
-        | CommandId::CursorHome
-        | CommandId::CursorEnd
-        | CommandId::EnterDir
+
+        CommandId::CursorUp       => move_cursor(state, -1),
+        CommandId::CursorDown     => move_cursor(state, 1),
+        CommandId::CursorPageUp => {
+            #[allow(clippy::cast_possible_wrap)]
+            move_cursor(state, -(PAGE as isize));
+        }
+        CommandId::CursorPageDown => {
+            #[allow(clippy::cast_possible_wrap)]
+            move_cursor(state, PAGE as isize);
+        }
+        CommandId::CursorHome     => set_cursor(state, 0),
+        CommandId::CursorEnd     => {
+            let last = state.focused().entries.len().saturating_sub(1);
+            set_cursor(state, last);
+        }
+
+        // Phase 2 / 3 work below.
+        CommandId::EnterDir
         | CommandId::ParentDir
         | CommandId::ToggleSelect
         | CommandId::SelectAll
@@ -219,10 +229,31 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
         | CommandId::CycleSort
         | CommandId::RescanFocused
         | CommandId::RescanBoth => {
-            // Phase 2: implement.
+            // Implemented in later Phase 2 tasks.
         }
     }
     Vec::new()
+}
+
+#[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+fn move_cursor(state: &mut State, delta: isize) {
+    let panel = state.focused_mut();
+    if panel.entries.is_empty() {
+        return;
+    }
+    let last = panel.entries.len() - 1;
+    let cur = panel.cursor as isize;
+    let next = (cur + delta).clamp(0, last as isize) as usize;
+    panel.cursor = next;
+}
+
+fn set_cursor(state: &mut State, i: usize) {
+    let panel = state.focused_mut();
+    if panel.entries.is_empty() {
+        return;
+    }
+    let last = panel.entries.len() - 1;
+    panel.cursor = i.min(last);
 }
 
 #[cfg(test)]
@@ -338,6 +369,58 @@ mod tests {
         let s = st();
         let (_, cmds) = update(s, key(KeyCode::F(11)));
         assert!(cmds.is_empty());
+    }
+
+    fn st_with_entries(n: usize) -> State {
+        let mut s = st();
+        let entries: Vec<crate::state::DirEntry> = (0..n)
+            .map(|i| crate::state::DirEntry::file(format!("f{i:03}"), i as u64))
+            .collect();
+        s.panels[0].entries = entries.into();
+        s
+    }
+
+    #[test]
+    fn cursor_down_increments_within_bounds() {
+        let s = st_with_entries(5);
+        let (s, _) = update(s, Event::Command(CommandId::CursorDown));
+        assert_eq!(s.panels[0].cursor, 1);
+        let (s, _) = update(s, Event::Command(CommandId::CursorDown));
+        assert_eq!(s.panels[0].cursor, 2);
+    }
+
+    #[test]
+    fn cursor_down_clamps_at_last_entry() {
+        let mut s = st_with_entries(3);
+        s.panels[0].cursor = 2;
+        let (s, _) = update(s, Event::Command(CommandId::CursorDown));
+        assert_eq!(s.panels[0].cursor, 2);
+    }
+
+    #[test]
+    fn cursor_up_clamps_at_zero() {
+        let s = st_with_entries(5);
+        let (s, _) = update(s, Event::Command(CommandId::CursorUp));
+        assert_eq!(s.panels[0].cursor, 0);
+    }
+
+    #[test]
+    fn cursor_home_and_end() {
+        let mut s = st_with_entries(20);
+        s.panels[0].cursor = 5;
+        let (s, _) = update(s, Event::Command(CommandId::CursorEnd));
+        assert_eq!(s.panels[0].cursor, 19);
+        let (s, _) = update(s, Event::Command(CommandId::CursorHome));
+        assert_eq!(s.panels[0].cursor, 0);
+    }
+
+    #[test]
+    fn page_down_then_page_up_returns_to_start() {
+        let s = st_with_entries(50);
+        let (s, _) = update(s, Event::Command(CommandId::CursorPageDown));
+        assert_eq!(s.panels[0].cursor, 10);
+        let (s, _) = update(s, Event::Command(CommandId::CursorPageUp));
+        assert_eq!(s.panels[0].cursor, 0);
     }
 
     #[test]
