@@ -88,12 +88,14 @@ pub fn run(config: Config) -> Result<()> {
                     schedule_rescan(&mut executor, &state, state.focus);
                 }
                 Command::StartDelete { paths } => {
+                    let focused = state.focus;
                     let id = executor.start_delete(paths);
                     state.workers.insert(
                         id,
                         mx_core::state::WorkerState {
                             id,
                             kind: mx_core::state::WorkerKind::Delete,
+                            affected_sides: vec![focused],
                         },
                     );
                 }
@@ -101,12 +103,14 @@ pub fn run(config: Config) -> Result<()> {
                     executor.cancel(id);
                 }
                 Command::StartCopy { src, dst } => {
+                    let other = state.focus.other();
                     let id = executor.start_copy(src, dst);
                     state.workers.insert(
                         id,
                         mx_core::state::WorkerState {
                             id,
                             kind: mx_core::state::WorkerKind::Copy,
+                            affected_sides: vec![other],
                         },
                     );
                 }
@@ -114,12 +118,15 @@ pub fn run(config: Config) -> Result<()> {
                     executor.resolve_conflict(id, policy);
                 }
                 Command::StartMove { src, dst } => {
+                    let focused = state.focus;
+                    let other = state.focus.other();
                     let id = executor.start_move(src, dst);
                     state.workers.insert(
                         id,
                         mx_core::state::WorkerState {
                             id,
                             kind: mx_core::state::WorkerKind::Move,
+                            affected_sides: vec![focused, other],
                         },
                     );
                 }

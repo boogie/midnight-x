@@ -45,7 +45,7 @@ pub fn update(mut state: State, event: Event) -> (State, Vec<Command>) {
             }
         }
         Event::Worker(id, msg) => {
-            handle_worker_msg(&mut state, id, msg);
+            handle_worker_msg(&mut state, id, msg, &mut cmds);
         }
         Event::Resize { .. } => { /* renderer reads new size next frame */ }
         Event::PreviewLoaded {
@@ -149,7 +149,12 @@ fn handle_chord(state: &mut State, chord: KeyChord, cmds: &mut Vec<Command>) {
     }
 }
 
-fn handle_worker_msg(state: &mut State, id: crate::event::WorkerId, msg: crate::event::WorkerMsg) {
+fn handle_worker_msg(
+    state: &mut State,
+    id: crate::event::WorkerId,
+    msg: crate::event::WorkerMsg,
+    cmds: &mut Vec<Command>,
+) {
     use crate::event::WorkerMsg;
     use crate::state::{ErrorDialog, Modal, ProgressDialog};
     match msg {
@@ -201,7 +206,7 @@ fn handle_worker_msg(state: &mut State, id: crate::event::WorkerId, msg: crate::
                     state.modal = None;
                 }
             }
-            state.workers.remove(&id);
+            schedule_post_op_rescan(state, id, cmds);
         }
         WorkerMsg::Failed { errors } => {
             state.modal = Some(Modal::Error(ErrorDialog {
@@ -213,7 +218,9 @@ fn handle_worker_msg(state: &mut State, id: crate::event::WorkerId, msg: crate::
                     .map(|(p, e)| format!("{p}: {e}"))
                     .collect(),
             }));
-            state.workers.remove(&id);
+            // Even on failure, the panels may have changed. Rescan affected
+            // sides so the UI reflects partial successes.
+            schedule_post_op_rescan(state, id, cmds);
         }
         WorkerMsg::Conflict { src, dst, kind } => {
             use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind};
@@ -672,6 +679,23 @@ fn cd_to(state: &mut State, side: PanelSide, dir: camino::Utf8PathBuf) {
     panel.loading = true;
 }
 
+/// Pop the worker entry, mark its affected panels as loading, and emit a
+/// `RescanDir` per side. Called from both `Done` and `Failed` paths so the
+/// UI always reflects the post-op filesystem state.
+fn schedule_post_op_rescan(
+    state: &mut State,
+    id: crate::event::WorkerId,
+    cmds: &mut Vec<Command>,
+) {
+    let Some(worker) = state.workers.remove(&id) else {
+        return;
+    };
+    for side in worker.affected_sides {
+        state.panels[side.index()].loading = true;
+        cmds.push(Command::RescanDir(side));
+    }
+}
+
 fn collect_targets(panel: &crate::state::PanelState) -> Vec<camino::Utf8PathBuf> {
     let mut out = Vec::new();
     if !panel.selection.is_empty() {
@@ -869,6 +893,7 @@ mod tests {
             crate::state::WorkerState {
                 id: crate::event::WorkerId(1),
                 kind: crate::state::WorkerKind::Copy,
+                affected_sides: vec![PanelSide::Right],
             },
         );
         let (s, cmds) = update(s, key(KeyCode::F(10)));

@@ -259,6 +259,8 @@ pub struct ErrorDialog {
 pub struct WorkerState {
     pub id: WorkerId,
     pub kind: WorkerKind,
+    /// Panels that should be rescanned once the worker reports `Done` / `Failed`.
+    pub affected_sides: Vec<PanelSide>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
