@@ -143,3 +143,27 @@ fn help_modal_open() {
     );
     insta::assert_snapshot!("help_modal_classic_wide", buffer_snapshot(&buf));
 }
+
+#[test]
+fn viewer_modal_with_content() {
+    use mx_core::state::{Modal, ViewerDialog};
+    let mut s = fresh(Theme::CLASSIC);
+    s.modal = Some(Modal::Viewer(ViewerDialog {
+        path: "/x/hello.txt".into(),
+        body: "line one\nline two\nline three".into(),
+        scroll: 0,
+        truncated: false,
+        binary: false,
+        loading: false,
+    }));
+    let buf = draw_to_buffer(
+        &s,
+        Rect {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 30,
+        },
+    );
+    insta::assert_snapshot!("viewer_classic_wide", buffer_snapshot(&buf));
+}

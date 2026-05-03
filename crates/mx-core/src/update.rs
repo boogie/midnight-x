@@ -43,6 +43,29 @@ pub fn update(mut state: State, event: Event) -> (State, Vec<Command>) {
             handle_worker_msg(&mut state, id, msg);
         }
         Event::Resize { .. } => { /* renderer reads new size next frame */ }
+        Event::PreviewLoaded {
+            path,
+            body,
+            truncated,
+            binary,
+        } => {
+            if let Some(crate::state::Modal::Viewer(v)) = &mut state.modal {
+                if v.path == path {
+                    v.body = body;
+                    v.truncated = truncated;
+                    v.binary = binary;
+                    v.loading = false;
+                }
+            }
+        }
+        Event::PreviewFailed { path, error } => {
+            if let Some(crate::state::Modal::Viewer(v)) = &mut state.modal {
+                if v.path == path {
+                    v.body = format!("error: {error}");
+                    v.loading = false;
+                }
+            }
+        }
     }
 
     (state, cmds)
@@ -148,9 +171,44 @@ fn flush_pending_chord(state: &mut State, cmds: &mut Vec<Command>) {
 }
 
 fn dispatch(state: &mut State, id: CommandId) -> Vec<Command> {
+    // Viewer modal handles scroll commands directly.
+    if let Some(Modal::Viewer(v)) = &mut state.modal {
+        match id {
+            CommandId::CursorDown => {
+                v.scroll = v.scroll.saturating_add(1);
+                return Vec::new();
+            }
+            CommandId::CursorUp => {
+                v.scroll = v.scroll.saturating_sub(1);
+                return Vec::new();
+            }
+            CommandId::CursorPageDown => {
+                v.scroll = v.scroll.saturating_add(20);
+                return Vec::new();
+            }
+            CommandId::CursorPageUp => {
+                v.scroll = v.scroll.saturating_sub(20);
+                return Vec::new();
+            }
+            CommandId::CursorHome => {
+                v.scroll = 0;
+                return Vec::new();
+            }
+            CommandId::CursorEnd => {
+                v.scroll = usize::MAX;
+                return Vec::new();
+            }
+            _ => {}
+        }
+    }
+
     // If a modal swallows the input, handle that first.
     if let Some(m) = &state.modal {
         match (m, id) {
+            (Modal::Viewer(_), CommandId::View | CommandId::Cancel) => {
+                state.modal = None;
+                return Vec::new();
+            }
             (_, CommandId::Cancel) | (Modal::Help, CommandId::Help) => {
                 state.modal = None;
                 return Vec::new();
@@ -160,7 +218,7 @@ fn dispatch(state: &mut State, id: CommandId) -> Vec<Command> {
                 state.modal = None;
                 return vec![Command::Quit];
             }
-            // Anything else while a modal is open: ignored in Phase 1.
+            // Anything else while a modal is open: ignored.
             _ => return Vec::new(),
         }
     }
@@ -311,14 +369,35 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             }
         }
 
+        CommandId::View => {
+            use crate::state::{EntryKind, Modal, ViewerDialog};
+            let panel = state.focused();
+            if panel.entries.is_empty() {
+                return Vec::new();
+            }
+            let entry = &panel.entries[panel.cursor];
+            if entry.kind != EntryKind::File && entry.kind != EntryKind::Symlink {
+                return Vec::new();
+            }
+            let path = panel.cwd.join(&entry.name);
+            state.modal = Some(Modal::Viewer(ViewerDialog {
+                path: path.clone(),
+                body: "loading…".into(),
+                scroll: 0,
+                truncated: false,
+                binary: false,
+                loading: true,
+            }));
+            return vec![Command::OpenViewer(path)];
+        }
+
         // Phase 3 work below.
         CommandId::Copy
         | CommandId::Move
         | CommandId::Delete
         | CommandId::Mkdir
-        | CommandId::Rename
-        | CommandId::View => {
-            // View is filled in by Task 14 (this Phase). Others are Phase 3.
+        | CommandId::Rename => {
+            // Phase 3.
         }
     }
     Vec::new()
@@ -673,6 +752,68 @@ mod tests {
         s.panels[0].selection.insert(3);
         let (s, _) = update(s, Event::Command(CommandId::SelectNone));
         assert!(s.panels[0].selection.is_empty());
+    }
+
+    #[test]
+    fn view_command_on_file_opens_loading_viewer_and_emits_open_viewer() {
+        let mut s = st();
+        s.panels[0].entries = vec![
+            crate::state::DirEntry::parent(),
+            crate::state::DirEntry::file("README.md", 100),
+        ]
+        .into();
+        s.panels[0].cursor = 1;
+        s.panels[0].cwd = "/x".into();
+
+        let (s, cmds) = update(s, Event::Command(CommandId::View));
+        match s.modal {
+            Some(crate::state::Modal::Viewer(ref v)) => {
+                assert_eq!(v.path, "/x/README.md");
+                assert!(v.loading);
+            }
+            _ => panic!("expected Viewer modal"),
+        }
+        assert_eq!(cmds, vec![Command::OpenViewer("/x/README.md".into())]);
+    }
+
+    #[test]
+    fn view_command_on_dir_is_noop() {
+        let mut s = st();
+        s.panels[0].entries = vec![crate::state::DirEntry::dir("src")].into();
+        s.panels[0].cursor = 0;
+        let (s, cmds) = update(s, Event::Command(CommandId::View));
+        assert!(s.modal.is_none());
+        assert!(cmds.is_empty());
+    }
+
+    #[test]
+    fn preview_loaded_replaces_viewer_body() {
+        use crate::state::{Modal, ViewerDialog};
+        let mut s = st();
+        s.modal = Some(Modal::Viewer(ViewerDialog {
+            path: "/x/README.md".into(),
+            body: "loading…".into(),
+            scroll: 0,
+            truncated: false,
+            binary: false,
+            loading: true,
+        }));
+        let (s, _) = update(
+            s,
+            Event::PreviewLoaded {
+                path: "/x/README.md".into(),
+                body: "actual content".into(),
+                truncated: false,
+                binary: false,
+            },
+        );
+        match s.modal {
+            Some(Modal::Viewer(v)) => {
+                assert_eq!(v.body, "actual content");
+                assert!(!v.loading);
+            }
+            _ => panic!(),
+        }
     }
 
     #[test]

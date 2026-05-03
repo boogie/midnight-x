@@ -25,9 +25,10 @@ pub fn view(state: &State, layout: &FrameLayout, frame: &mut Frame<'_>) {
     render_status(frame, layout.status, state);
     render_hint(frame, layout.hint, state);
 
-    if let (Some(rect), Some(modal)) = (layout.modal, state.modal.as_ref()) {
-        render_modal(frame, rect, modal, theme);
+    if let (Some(rect), Some(_)) = (layout.modal, state.modal.as_ref()) {
+        render_modal(frame, rect, state);
     }
+    let _ = theme;
 }
 
 #[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
@@ -220,7 +221,12 @@ fn render_hint(frame: &mut Frame<'_>, area: Rect, state: &State) {
     let _ = state; // reserved for context-sensitive hints in Phase 2
 }
 
-fn render_modal(frame: &mut Frame<'_>, area: Rect, modal: &Modal, theme: &mx_core::theme::Theme) {
+fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
+    let theme = &state.config.theme;
+    let modal = state
+        .modal
+        .as_ref()
+        .expect("render_modal called without a modal");
     frame.render_widget(Clear, area);
     let title = match modal {
         Modal::Help => " Help ",
@@ -229,11 +235,10 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, modal: &Modal, theme: &mx_cor
         Modal::Input(_) => " Input ",
         Modal::Progress(_) => " Working… ",
         Modal::Error(_) => " Error ",
+        Modal::Viewer(_) => " View (Esc/F3 close, ↑↓ scroll) ",
     };
     let body = match modal {
-        Modal::Help => "Phase 1 help: F10/Ctrl-Q quits, Tab toggles focus, Esc cancels.\n\n\
-             (Press F1 again or Esc to dismiss.)"
-            .to_string(),
+        Modal::Help => render_help_body(&state.config.keymap),
         Modal::QuitConfirm => {
             "Workers are still running. Quit anyway?\n\n[ Yes ]   [ No ]".to_string()
         }
@@ -246,6 +251,7 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, modal: &Modal, theme: &mx_cor
                 d.current_path, d.bytes_done, d.bytes_total
             )
         }
+        Modal::Viewer(d) => render_viewer_body(d, area),
     };
     let p = Paragraph::new(body)
         .block(
@@ -257,4 +263,140 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, modal: &Modal, theme: &mx_cor
         )
         .style(modal_style(theme));
     frame.render_widget(p, area);
+}
+
+fn render_viewer_body(d: &mx_core::state::ViewerDialog, area: Rect) -> String {
+    if d.loading {
+        return "loading…".to_string();
+    }
+    let total: Vec<&str> = d.body.lines().collect();
+    let visible = area.height.saturating_sub(2) as usize;
+    let max_scroll = total.len().saturating_sub(visible);
+    let scroll = d.scroll.min(max_scroll);
+    let slice = total
+        .get(scroll..(scroll + visible).min(total.len()))
+        .unwrap_or(&[]);
+    let mut out = slice.join("\n");
+    if d.truncated {
+        out.push_str("\n[truncated]");
+    }
+    out
+}
+
+fn render_help_body(keymap: &mx_core::keymap::Keymap) -> String {
+    use std::fmt::Write as _;
+    use mx_core::command::CommandId;
+    use mx_core::keymap::sequence_to_string;
+
+    let groups: Vec<(&'static str, Vec<CommandId>)> = vec![
+        (
+            "Navigation",
+            vec![
+                CommandId::CursorUp,
+                CommandId::CursorDown,
+                CommandId::CursorPageUp,
+                CommandId::CursorPageDown,
+                CommandId::CursorHome,
+                CommandId::CursorEnd,
+                CommandId::EnterDir,
+                CommandId::ParentDir,
+                CommandId::FocusOther,
+                CommandId::SwapPanels,
+            ],
+        ),
+        (
+            "Selection",
+            vec![
+                CommandId::ToggleSelect,
+                CommandId::SelectAll,
+                CommandId::SelectNone,
+                CommandId::InvertSelection,
+            ],
+        ),
+        (
+            "View",
+            vec![
+                CommandId::View,
+                CommandId::ToggleHidden,
+                CommandId::CycleSort,
+            ],
+        ),
+        (
+            "File ops",
+            vec![
+                CommandId::Copy,
+                CommandId::Move,
+                CommandId::Delete,
+                CommandId::Mkdir,
+                CommandId::Rename,
+            ],
+        ),
+        (
+            "App",
+            vec![
+                CommandId::Help,
+                CommandId::QuitConfirm,
+                CommandId::Quit,
+                CommandId::Cancel,
+                CommandId::RescanFocused,
+                CommandId::RescanBoth,
+            ],
+        ),
+    ];
+
+    let mut out = String::new();
+    for (group, cmds) in &groups {
+        out.push_str(group);
+        out.push('\n');
+        for c in cmds {
+            let label = command_label(*c);
+            let bindings: Vec<String> = keymap
+                .bindings_view()
+                .iter()
+                .filter(|(_, cmd)| cmd == c)
+                .map(|(seq, _)| sequence_to_string(seq))
+                .collect();
+            if bindings.is_empty() {
+                continue;
+            }
+            let _ = writeln!(out, "  {:<22} {}", label, bindings.join(", "));
+        }
+        out.push('\n');
+    }
+    out.push_str("(Esc closes this help.)");
+    out
+}
+
+fn command_label(c: mx_core::command::CommandId) -> &'static str {
+    use mx_core::command::CommandId;
+    match c {
+        CommandId::CursorUp => "Move cursor up",
+        CommandId::CursorDown => "Move cursor down",
+        CommandId::CursorPageUp => "Page up",
+        CommandId::CursorPageDown => "Page down",
+        CommandId::CursorHome => "Top",
+        CommandId::CursorEnd => "Bottom",
+        CommandId::EnterDir => "Enter directory",
+        CommandId::ParentDir => "Parent directory",
+        CommandId::FocusOther => "Other panel",
+        CommandId::SwapPanels => "Swap panels",
+        CommandId::ToggleSelect => "Toggle select",
+        CommandId::SelectAll => "Select all",
+        CommandId::SelectNone => "Select none",
+        CommandId::InvertSelection => "Invert selection",
+        CommandId::View => "View file",
+        CommandId::ToggleHidden => "Toggle hidden",
+        CommandId::CycleSort => "Cycle sort mode",
+        CommandId::Copy => "Copy",
+        CommandId::Move => "Move",
+        CommandId::Delete => "Delete",
+        CommandId::Mkdir => "Make directory",
+        CommandId::Rename => "Rename",
+        CommandId::Help => "Help",
+        CommandId::QuitConfirm => "Quit (confirm)",
+        CommandId::Quit => "Quit",
+        CommandId::Cancel => "Cancel / close modal",
+        CommandId::RescanFocused => "Rescan",
+        CommandId::RescanBoth => "Rescan both",
+    }
 }

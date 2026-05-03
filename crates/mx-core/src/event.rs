@@ -50,6 +50,16 @@ pub enum Event {
     Worker(WorkerId, WorkerMsg),
     Tick { dt: Duration },
     Resize { cols: u16, rows: u16 },
+    PreviewLoaded {
+        path: camino::Utf8PathBuf,
+        body: String,
+        truncated: bool,
+        binary: bool,
+    },
+    PreviewFailed {
+        path: camino::Utf8PathBuf,
+        error: FsError,
+    },
 }
 
 #[cfg(test)]

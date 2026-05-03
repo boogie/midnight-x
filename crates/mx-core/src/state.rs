@@ -177,6 +177,17 @@ pub enum Modal {
     Error(ErrorDialog),
     Help,
     QuitConfirm,
+    Viewer(ViewerDialog),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ViewerDialog {
+    pub path: Utf8PathBuf,
+    pub body: String,
+    pub scroll: usize,
+    pub truncated: bool,
+    pub binary: bool,
+    pub loading: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -80,6 +80,13 @@ impl Keymap {
         }
     }
 
+    /// Borrow the internal binding list in insertion order. Used by the
+    /// Help modal renderer.
+    #[must_use]
+    pub fn bindings_view(&self) -> &[(Vec<KeyChord>, CommandId)] {
+        &self.bindings
+    }
+
     /// Returns `true` iff some binding is strictly longer than `seq` and
     /// starts with `seq`. The chord engine in `update()` uses this to decide
     /// whether to wait when an exact match is *also* a prefix of a longer
@@ -226,3 +233,73 @@ mod tests {
         assert_eq!(k.lookup(&[a, b]), Lookup::Match(CommandId::Help));
     }
 }
+
+/// Render a `KeyChord` back to the string the keymap parser accepts
+/// (`"ctrl-shift-pgup"`, `"esc"`, `"f5"`).
+#[must_use]
+pub fn chord_to_string(c: KeyChord) -> String {
+    let mut s = String::new();
+    if c.mods.ctrl {
+        s.push_str("ctrl-");
+    }
+    if c.mods.shift {
+        s.push_str("shift-");
+    }
+    if c.mods.alt {
+        s.push_str("alt-");
+    }
+    s.push_str(&keycode_to_string(c.code));
+    s
+}
+
+#[must_use]
+pub fn sequence_to_string(seq: &[KeyChord]) -> String {
+    seq.iter()
+        .map(|c| chord_to_string(*c))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn keycode_to_string(c: KeyCode) -> String {
+    match c {
+        KeyCode::Char(c)   => c.to_string(),
+        KeyCode::Enter     => "enter".into(),
+        KeyCode::Esc       => "esc".into(),
+        KeyCode::Tab       => "tab".into(),
+        KeyCode::BackTab   => "backtab".into(),
+        KeyCode::Backspace => "backspace".into(),
+        KeyCode::Delete    => "delete".into(),
+        KeyCode::Insert    => "insert".into(),
+        KeyCode::Home      => "home".into(),
+        KeyCode::End       => "end".into(),
+        KeyCode::PageUp    => "pgup".into(),
+        KeyCode::PageDown  => "pgdn".into(),
+        KeyCode::Up        => "up".into(),
+        KeyCode::Down      => "down".into(),
+        KeyCode::Left      => "left".into(),
+        KeyCode::Right     => "right".into(),
+        KeyCode::F(n)      => format!("f{n}"),
+        KeyCode::Null      => "null".into(),
+    }
+}
+
+#[cfg(test)]
+mod stringify_tests {
+    use super::*;
+
+    #[test]
+    fn round_trip_via_strings() {
+        let c = KeyChord::new(KeyCode::PageUp, KeyModifiers::ctrl());
+        assert_eq!(chord_to_string(c), "ctrl-pgup");
+    }
+
+    #[test]
+    fn sequence_round_trip() {
+        let seq = vec![
+            KeyChord::bare(KeyCode::Esc),
+            KeyChord::bare(KeyCode::Char('1')),
+        ];
+        assert_eq!(sequence_to_string(&seq), "esc 1");
+    }
+}
+

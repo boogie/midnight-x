@@ -9,20 +9,20 @@ expression: buffer_snapshot(&buf)
 │                                                ││                                                │
 │                                                ││                                                │
 │                                                ││                                                │
-│                   ┌ Help ────────────────────────────────────────────────────┐                   │
-│                   │Navigation                                                │                   │
-│                   │  Move cursor up         up                               │                   │
-│                   │  Move cursor down       down                             │                   │
-│                   │  Page up                pgup                             │                   │
-│                   │  Page down              pgdn                             │                   │
-│(empty)            │  Top                    home                             │                   │
-│                   │  Bottom                 end                              │                   │
-│                   │  Enter directory        enter                            │                   │
-│                   │  Parent directory       backspace                        │                   │
-│                   │  Other panel            tab                              │                   │
-│                   │  Swap panels            ctrl-u                           │                   │
+│                   ┌ View (Esc/F3 close, ↑↓ scroll) ──────────────────────────┐                   │
+│                   │line one                                                  │                   │
+│                   │line two                                                  │                   │
+│                   │line three                                                │                   │
 │                   │                                                          │                   │
-│                   │Selection                                                 │                   │
+│                   │                                                          │                   │
+│(empty)            │                                                          │                   │
+│                   │                                                          │                   │
+│                   │                                                          │                   │
+│                   │                                                          │                   │
+│                   │                                                          │                   │
+│                   │                                                          │                   │
+│                   │                                                          │                   │
+│                   │                                                          │                   │
 │                   └──────────────────────────────────────────────────────────┘                   │
 │                                                ││                                                │
 │                                                ││                                                │
