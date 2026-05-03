@@ -143,12 +143,12 @@ fn mtime_key(t: Option<SystemTime>) -> u128 {
 fn map_io(e: &std::io::Error) -> FsError {
     use std::io::ErrorKind as K;
     match e.kind() {
-        K::NotFound         => FsError::NotFound,
+        K::NotFound => FsError::NotFound,
         K::PermissionDenied => FsError::PermissionDenied,
-        K::AlreadyExists    => FsError::AlreadyExists,
-        K::NotADirectory    => FsError::NotADirectory,
-        K::IsADirectory     => FsError::IsADirectory,
-        _                   => FsError::Io(e.to_string()),
+        K::AlreadyExists => FsError::AlreadyExists,
+        K::NotADirectory => FsError::NotADirectory,
+        K::IsADirectory => FsError::IsADirectory,
+        _ => FsError::Io(e.to_string()),
     }
 }
 

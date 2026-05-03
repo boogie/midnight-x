@@ -128,11 +128,7 @@ fn handle_chord(state: &mut State, chord: KeyChord, cmds: &mut Vec<Command>) {
     }
 }
 
-fn handle_worker_msg(
-    state: &mut State,
-    _id: crate::event::WorkerId,
-    msg: crate::event::WorkerMsg,
-) {
+fn handle_worker_msg(state: &mut State, _id: crate::event::WorkerId, msg: crate::event::WorkerMsg) {
     use crate::event::WorkerMsg;
     match msg {
         WorkerMsg::DirScanned { side, entries } => {
@@ -255,8 +251,8 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             state.panels.swap(0, 1);
         }
 
-        CommandId::CursorUp       => move_cursor(state, -1),
-        CommandId::CursorDown     => move_cursor(state, 1),
+        CommandId::CursorUp => move_cursor(state, -1),
+        CommandId::CursorDown => move_cursor(state, 1),
         CommandId::CursorPageUp => {
             #[allow(clippy::cast_possible_wrap)]
             move_cursor(state, -(PAGE as isize));
@@ -265,8 +261,8 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             #[allow(clippy::cast_possible_wrap)]
             move_cursor(state, PAGE as isize);
         }
-        CommandId::CursorHome     => set_cursor(state, 0),
-        CommandId::CursorEnd     => {
+        CommandId::CursorHome => set_cursor(state, 0),
+        CommandId::CursorEnd => {
             let last = state.focused().entries.len().saturating_sub(1);
             set_cursor(state, last);
         }
@@ -403,7 +399,11 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
     Vec::new()
 }
 
-#[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+#[allow(
+    clippy::cast_possible_wrap,
+    clippy::cast_sign_loss,
+    clippy::cast_possible_truncation
+)]
 fn move_cursor(state: &mut State, delta: isize) {
     let panel = state.focused_mut();
     if panel.entries.is_empty() {
@@ -828,7 +828,10 @@ mod tests {
         ];
         let ev = Event::Worker(
             WorkerId(1),
-            WorkerMsg::DirScanned { side: PanelSide::Left, entries },
+            WorkerMsg::DirScanned {
+                side: PanelSide::Left,
+                entries,
+            },
         );
         let (s, cmds) = update(s, ev);
         assert_eq!(s.panels[0].entries.len(), 3);

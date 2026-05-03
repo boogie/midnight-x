@@ -262,24 +262,24 @@ pub fn sequence_to_string(seq: &[KeyChord]) -> String {
 
 fn keycode_to_string(c: KeyCode) -> String {
     match c {
-        KeyCode::Char(c)   => c.to_string(),
-        KeyCode::Enter     => "enter".into(),
-        KeyCode::Esc       => "esc".into(),
-        KeyCode::Tab       => "tab".into(),
-        KeyCode::BackTab   => "backtab".into(),
+        KeyCode::Char(c) => c.to_string(),
+        KeyCode::Enter => "enter".into(),
+        KeyCode::Esc => "esc".into(),
+        KeyCode::Tab => "tab".into(),
+        KeyCode::BackTab => "backtab".into(),
         KeyCode::Backspace => "backspace".into(),
-        KeyCode::Delete    => "delete".into(),
-        KeyCode::Insert    => "insert".into(),
-        KeyCode::Home      => "home".into(),
-        KeyCode::End       => "end".into(),
-        KeyCode::PageUp    => "pgup".into(),
-        KeyCode::PageDown  => "pgdn".into(),
-        KeyCode::Up        => "up".into(),
-        KeyCode::Down      => "down".into(),
-        KeyCode::Left      => "left".into(),
-        KeyCode::Right     => "right".into(),
-        KeyCode::F(n)      => format!("f{n}"),
-        KeyCode::Null      => "null".into(),
+        KeyCode::Delete => "delete".into(),
+        KeyCode::Insert => "insert".into(),
+        KeyCode::Home => "home".into(),
+        KeyCode::End => "end".into(),
+        KeyCode::PageUp => "pgup".into(),
+        KeyCode::PageDown => "pgdn".into(),
+        KeyCode::Up => "up".into(),
+        KeyCode::Down => "down".into(),
+        KeyCode::Left => "left".into(),
+        KeyCode::Right => "right".into(),
+        KeyCode::F(n) => format!("f{n}"),
+        KeyCode::Null => "null".into(),
     }
 }
 
@@ -302,4 +302,3 @@ mod stringify_tests {
         assert_eq!(sequence_to_string(&seq), "esc 1");
     }
 }
-

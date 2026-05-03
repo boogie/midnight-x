@@ -193,16 +193,17 @@ fn clamp_scroll(scroll: usize, cursor: usize, visible_h: usize, len: usize) -> u
 fn render_status(frame: &mut Frame<'_>, area: Rect, state: &State) {
     let theme = &state.config.theme;
     let panel = state.focused();
-    let (files, dirs, bytes) = panel.entries.iter().fold(
-        (0u64, 0u64, 0u64),
-        |(f, d, b), e| match e.kind {
-            mx_core::state::EntryKind::Dir => (f, d + 1, b),
-            mx_core::state::EntryKind::Symlink | mx_core::state::EntryKind::File => {
-                (f + 1, d, b + e.size.unwrap_or(0))
-            }
-            mx_core::state::EntryKind::Unreadable => (f, d, b),
-        },
-    );
+    let (files, dirs, bytes) =
+        panel
+            .entries
+            .iter()
+            .fold((0u64, 0u64, 0u64), |(f, d, b), e| match e.kind {
+                mx_core::state::EntryKind::Dir => (f, d + 1, b),
+                mx_core::state::EntryKind::Symlink | mx_core::state::EntryKind::File => {
+                    (f + 1, d, b + e.size.unwrap_or(0))
+                }
+                mx_core::state::EntryKind::Unreadable => (f, d, b),
+            });
     let text = if state.status.text.is_empty() {
         format!(
             " {files} files, {dirs} dirs, {} ",
@@ -284,9 +285,9 @@ fn render_viewer_body(d: &mx_core::state::ViewerDialog, area: Rect) -> String {
 }
 
 fn render_help_body(keymap: &mx_core::keymap::Keymap) -> String {
-    use std::fmt::Write as _;
     use mx_core::command::CommandId;
     use mx_core::keymap::sequence_to_string;
+    use std::fmt::Write as _;
 
     let groups: Vec<(&'static str, Vec<CommandId>)> = vec![
         (

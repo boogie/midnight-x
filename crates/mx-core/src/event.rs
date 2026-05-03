@@ -48,8 +48,13 @@ pub enum Event {
     Input(InputEvent),
     Command(CommandId),
     Worker(WorkerId, WorkerMsg),
-    Tick { dt: Duration },
-    Resize { cols: u16, rows: u16 },
+    Tick {
+        dt: Duration,
+    },
+    Resize {
+        cols: u16,
+        rows: u16,
+    },
     PreviewLoaded {
         path: camino::Utf8PathBuf,
         body: String,

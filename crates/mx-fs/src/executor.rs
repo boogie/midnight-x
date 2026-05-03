@@ -15,7 +15,7 @@ use mx_core::state::{PanelSide, SortMode};
 use crate::dir_scan::scan;
 
 pub struct Executor {
-    tx:      Sender<Event>,
+    tx: Sender<Event>,
     next_id: AtomicU64,
     handles: HashMap<WorkerId, JoinHandle<()>>,
 }
@@ -23,7 +23,11 @@ pub struct Executor {
 impl Executor {
     #[must_use]
     pub fn new(tx: Sender<Event>) -> Self {
-        Self { tx, next_id: AtomicU64::new(1), handles: HashMap::new() }
+        Self {
+            tx,
+            next_id: AtomicU64::new(1),
+            handles: HashMap::new(),
+        }
     }
 
     fn alloc_id(&self) -> WorkerId {
@@ -125,7 +129,13 @@ mod tests {
         let ev = drain(&rx, |e| {
             matches!(
                 e,
-                Event::Worker(_, WorkerMsg::DirScanned { side: PanelSide::Left, .. })
+                Event::Worker(
+                    _,
+                    WorkerMsg::DirScanned {
+                        side: PanelSide::Left,
+                        ..
+                    }
+                )
             )
         });
         match ev {

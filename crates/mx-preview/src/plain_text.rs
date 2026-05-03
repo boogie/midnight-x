@@ -79,10 +79,10 @@ fn looks_binary(bytes: &[u8]) -> bool {
 fn map_io(e: &std::io::Error) -> FsError {
     use std::io::ErrorKind as K;
     match e.kind() {
-        K::NotFound         => FsError::NotFound,
+        K::NotFound => FsError::NotFound,
         K::PermissionDenied => FsError::PermissionDenied,
-        K::IsADirectory     => FsError::IsADirectory,
-        _                   => FsError::Io(e.to_string()),
+        K::IsADirectory => FsError::IsADirectory,
+        _ => FsError::Io(e.to_string()),
     }
 }
 

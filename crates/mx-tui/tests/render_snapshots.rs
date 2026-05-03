@@ -65,7 +65,10 @@ fn empty_panel_collapsed_narrow() {
 
 fn populated_state(theme: Theme) -> State {
     use mx_core::state::DirEntry;
-    let c = Config { theme, ..Config::default() };
+    let c = Config {
+        theme,
+        ..Config::default()
+    };
     let mut s = State::new(Arc::new(c), "/Users/boogie/proj".into(), "/tmp".into());
     s.focus = PanelSide::Left;
     let entries = vec![
