@@ -441,6 +441,12 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
         _ => u16::try_from(body_lines.len()).unwrap_or(u16::MAX),
     };
     let buttons_h: u16 = u16::from(!buttons.is_empty());
+    // Modals with an input field get a horizontal separator between the
+    // field and the button row so the editable area is visually closed off.
+    let separator_h: u16 = match modal {
+        Modal::Op(_) | Modal::Input(_) if buttons_h == 1 => 1,
+        _ => 0,
+    };
     let widget_min_w = match modal {
         Modal::Op(d) => d.prompt.chars().count().max(d.target.chars().count() + 2),
         Modal::Input(d) => d
@@ -466,9 +472,11 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
     let max_w = screen.width.saturating_sub(6);
     let max_h = screen.height.saturating_sub(2);
     let modal_w = (u16::try_from(inner_w).unwrap_or(u16::MAX).saturating_add(6)).min(max_w);
+    // 2 rows of border + body + optional separator + buttons.
     let modal_h = body_h
+        .saturating_add(separator_h)
         .saturating_add(buttons_h)
-        .saturating_add(4)
+        .saturating_add(2)
         .min(max_h);
 
     let x = screen.x + (screen.width.saturating_sub(modal_w)) / 2;
@@ -501,17 +509,17 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
 
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
+        .border_type(BorderType::Double)
         .title(title)
         .title_alignment(Alignment::Center)
         .title_style(chrome.add_modifier(Modifier::BOLD))
         .style(chrome)
-        .padding(Padding::new(2, 2, 1, 1));
+        .padding(Padding::new(2, 2, 0, 0));
     let inner = block.inner(rect);
     frame.render_widget(block, rect);
 
-    // Body (no separator row between body and buttons).
-    let actual_body_h = inner.height.saturating_sub(buttons_h);
+    // Body / separator / buttons — split inner into three vertical bands.
+    let actual_body_h = inner.height.saturating_sub(buttons_h + separator_h);
     let body_area = Rect {
         x: inner.x,
         y: inner.y,
@@ -534,10 +542,37 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
         }
     }
 
+    // Internal separator (only when the modal has a typed field above buttons).
+    if separator_h == 1 {
+        let sep_y = inner.y + actual_body_h;
+        let sep_text: String = "═".repeat(inner.width as usize);
+        frame.render_widget(
+            Paragraph::new(sep_text).style(chrome),
+            Rect {
+                x: inner.x,
+                y: sep_y,
+                width: inner.width,
+                height: 1,
+            },
+        );
+        // Replace the side-border cells the padding leaves alone so the
+        // separator visually fuses into the double-line frame.
+        let left_x = rect.x;
+        let right_x = rect.x + rect.width - 1;
+        if let Some(cell) = frame.buffer_mut().cell_mut((left_x, sep_y)) {
+            cell.set_symbol("╠");
+            cell.set_style(chrome);
+        }
+        if let Some(cell) = frame.buffer_mut().cell_mut((right_x, sep_y)) {
+            cell.set_symbol("╣");
+            cell.set_style(chrome);
+        }
+    }
+
     if !buttons.is_empty() {
         let row = Rect {
             x: inner.x,
-            y: inner.y + actual_body_h,
+            y: inner.y + actual_body_h + separator_h,
             width: inner.width,
             height: 1,
         };

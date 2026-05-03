@@ -3,34 +3,34 @@ source: crates/mx-tui/tests/render_snapshots.rs
 expression: buffer_snapshot(&buf)
 ---
 ╔════════════════════                                                         ═════════════════════╗
-║                        ╭──────────────────── Help ─────────────────────╮                         ║
-║                        │                                               │                         ║
-║                        │  Navigation                                   │                         ║
-║                        │    Move cursor up         up                  │                         ║
-║                        │    Move cursor down       down                │                         ║
-║                        │    Page up                pgup                │                         ║
-║                        │    Page down              pgdn                │                         ║
-║                        │    Top                    home                │                         ║
-║                        │    Bottom                 end                 │                         ║
-║                        │    Enter directory        enter               │                         ║
-║                        │    Parent directory       backspace           │                         ║
-║                        │    Other panel            tab                 │                         ║
-║(empty)                 │    Swap panels            ctrl-u              │                         ║
-║                        │                                               │                         ║
-║                        │  Selection                                    │                         ║
-║                        │    Toggle select          insert              │                         ║
-║                        │    Select all             ctrl-a              │                         ║
-║                        │    Invert selection       *                   │                         ║
-║                        │                                               │                         ║
-║                        │  View                                         │                         ║
-║                        │    View file              f3, esc 3           │                         ║
-║                        │    Toggle hidden          ctrl-h              │                         ║
-║                        │    Cycle sort mode        ctrl-s              │                         ║
-║                        │                                               │                         ║
-║                        │  File ops                                     │                         ║
-║                        │    Copy                   f5, esc 5           │                         ║
-╚═════════════════════   │                                               │   ══════════════════════╝
- 0 files, 0 dirs, 0      ╰───────────────────────────────────────────────╯                          
+║                        ╔════════════════════ Help ═════════════════════╗                         ║
+║                        ║  Navigation                                   ║                         ║
+║                        ║    Move cursor up         up                  ║                         ║
+║                        ║    Move cursor down       down                ║                         ║
+║                        ║    Page up                pgup                ║                         ║
+║                        ║    Page down              pgdn                ║                         ║
+║                        ║    Top                    home                ║                         ║
+║                        ║    Bottom                 end                 ║                         ║
+║                        ║    Enter directory        enter               ║                         ║
+║                        ║    Parent directory       backspace           ║                         ║
+║                        ║    Other panel            tab                 ║                         ║
+║                        ║    Swap panels            ctrl-u              ║                         ║
+║(empty)                 ║                                               ║                         ║
+║                        ║  Selection                                    ║                         ║
+║                        ║    Toggle select          insert              ║                         ║
+║                        ║    Select all             ctrl-a              ║                         ║
+║                        ║    Invert selection       *                   ║                         ║
+║                        ║                                               ║                         ║
+║                        ║  View                                         ║                         ║
+║                        ║    View file              f3, esc 3           ║                         ║
+║                        ║    Toggle hidden          ctrl-h              ║                         ║
+║                        ║    Cycle sort mode        ctrl-s              ║                         ║
+║                        ║                                               ║                         ║
+║                        ║  File ops                                     ║                         ║
+║                        ║    Copy                   f5, esc 5           ║                         ║
+║                        ║    Move                   f6, esc 6           ║                         ║
+╚═════════════════════   ║    Delete                 f8, delete, esc 8   ║   ══════════════════════╝
+ 0 files, 0 dirs, 0      ╚═══════════════════════════════════════════════╝                          
  F1 Help  F3 View  F5                                                                               
 ---
 (0,0) Style { fg: Some(Rgb(255, 255, 85)), bg: Some(Rgb(0, 0, 170)), add_modifier: BOLD, sub_modifier: NONE }
