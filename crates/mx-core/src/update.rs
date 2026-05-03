@@ -77,6 +77,14 @@ pub fn update(mut state: State, event: Event) -> (State, Vec<Command>) {
 }
 
 fn handle_chord(state: &mut State, chord: KeyChord, cmds: &mut Vec<Command>) {
+    // Typing into an Input modal short-circuits the keymap. Anything we
+    // don't consume (Esc, Tab, Enter, function keys) bubbles up.
+    if let Some(Modal::Input(d)) = state.modal.as_mut() {
+        if input_modal_consume_key(d, chord) {
+            return;
+        }
+    }
+
     state.pending_chord.push(chord);
     let lookup = state.config.keymap.lookup(&state.pending_chord);
 
@@ -185,6 +193,21 @@ fn flush_pending_chord(state: &mut State, cmds: &mut Vec<Command>) {
 }
 
 fn dispatch(state: &mut State, id: CommandId) -> Vec<Command> {
+    // Input modal: anything not consumed by typing (Esc, Tab, Enter) lands
+    // here. Esc/Cancel closes; Enter (=EnterDir) submits.
+    if let Some(Modal::Input(_)) = state.modal.as_ref() {
+        match id {
+            CommandId::Cancel => {
+                state.modal = None;
+                return Vec::new();
+            }
+            CommandId::EnterDir => {
+                return resolve_input(state);
+            }
+            _ => return Vec::new(),
+        }
+    }
+
     // Viewer modal handles scroll commands directly.
     if let Some(Modal::Viewer(v)) = &mut state.modal {
         match id {
@@ -486,6 +509,95 @@ fn cd_to(state: &mut State, side: PanelSide, dir: camino::Utf8PathBuf) {
     panel.loading = true;
 }
 
+fn input_modal_consume_key(d: &mut crate::state::InputDialog, c: KeyChord) -> bool {
+    use crate::input::KeyCode;
+    if c.mods.ctrl || c.mods.alt {
+        return false;
+    }
+    match c.code {
+        KeyCode::Char(ch) => {
+            d.value.insert(d.cursor, ch);
+            d.cursor += ch.len_utf8();
+            true
+        }
+        KeyCode::Backspace => {
+            if d.cursor > 0 {
+                let new_cursor = floor_char_boundary(&d.value, d.cursor - 1);
+                d.value.replace_range(new_cursor..d.cursor, "");
+                d.cursor = new_cursor;
+            }
+            true
+        }
+        KeyCode::Delete => {
+            if d.cursor < d.value.len() {
+                let next = ceil_char_boundary(&d.value, d.cursor + 1);
+                d.value.replace_range(d.cursor..next, "");
+            }
+            true
+        }
+        KeyCode::Left => {
+            if d.cursor > 0 {
+                d.cursor = floor_char_boundary(&d.value, d.cursor - 1);
+            }
+            true
+        }
+        KeyCode::Right => {
+            if d.cursor < d.value.len() {
+                d.cursor = ceil_char_boundary(&d.value, d.cursor + 1);
+            }
+            true
+        }
+        KeyCode::Home => {
+            d.cursor = 0;
+            true
+        }
+        KeyCode::End => {
+            d.cursor = d.value.len();
+            true
+        }
+        _ => false,
+    }
+}
+
+fn floor_char_boundary(s: &str, mut i: usize) -> usize {
+    while i > 0 && !s.is_char_boundary(i) {
+        i -= 1;
+    }
+    i
+}
+fn ceil_char_boundary(s: &str, mut i: usize) -> usize {
+    while i < s.len() && !s.is_char_boundary(i) {
+        i += 1;
+    }
+    i
+}
+
+fn resolve_input(state: &mut State) -> Vec<Command> {
+    use crate::state::{InputKind, Modal};
+    let Some(Modal::Input(d)) = state.modal.take() else {
+        return Vec::new();
+    };
+    let value = d.value.trim().to_string();
+    if value.is_empty() {
+        return Vec::new();
+    }
+    match d.kind {
+        InputKind::Mkdir { parent } => vec![Command::Mkdir { parent, name: value }],
+        InputKind::Rename { from } => {
+            let parent = from
+                .parent()
+                .map(camino::Utf8Path::to_path_buf)
+                .unwrap_or_default();
+            let to = if parent.as_str().is_empty() {
+                camino::Utf8PathBuf::from(value)
+            } else {
+                parent.join(value)
+            };
+            vec![Command::Rename { from, to }]
+        }
+    }
+}
+
 fn resolve_confirm(state: &mut State) -> Vec<Command> {
     use crate::command::OverwritePolicy as P;
     use crate::state::{ConfirmButton, ConfirmKind, Modal};
@@ -689,6 +801,68 @@ mod tests {
         assert_eq!(
             cmds,
             vec![Command::StartDelete { paths: vec!["/x/y.txt".into()] }],
+        );
+    }
+
+    #[test]
+    fn input_modal_accepts_typed_characters() {
+        use crate::state::{InputDialog, InputKind, Modal};
+        let mut s = st();
+        s.modal = Some(Modal::Input(InputDialog {
+            title: "New".into(),
+            prompt: "name:".into(),
+            value: String::new(),
+            cursor: 0,
+            kind: InputKind::Mkdir { parent: "/x".into() },
+        }));
+        let (s, _) = update(s, key(KeyCode::Char('a')));
+        let (s, _) = update(s, key(KeyCode::Char('b')));
+        match s.modal {
+            Some(Modal::Input(ref d)) => {
+                assert_eq!(d.value, "ab");
+                assert_eq!(d.cursor, 2);
+            }
+            _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn input_modal_backspace_deletes_left() {
+        use crate::state::{InputDialog, InputKind, Modal};
+        let mut s = st();
+        s.modal = Some(Modal::Input(InputDialog {
+            title: "x".into(),
+            prompt: "y".into(),
+            value: "abc".into(),
+            cursor: 3,
+            kind: InputKind::Mkdir { parent: "/x".into() },
+        }));
+        let (s, _) = update(s, key(KeyCode::Backspace));
+        match s.modal {
+            Some(Modal::Input(ref d)) => {
+                assert_eq!(d.value, "ab");
+                assert_eq!(d.cursor, 2);
+            }
+            _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn input_modal_enter_submits_mkdir() {
+        use crate::state::{InputDialog, InputKind, Modal};
+        let mut s = st();
+        s.modal = Some(Modal::Input(InputDialog {
+            title: "New dir".into(),
+            prompt: "name:".into(),
+            value: "src".into(),
+            cursor: 3,
+            kind: InputKind::Mkdir { parent: "/proj".into() },
+        }));
+        let (s, cmds) = update(s, key(KeyCode::Enter));
+        assert!(s.modal.is_none());
+        assert_eq!(
+            cmds,
+            vec![Command::Mkdir { parent: "/proj".into(), name: "src".into() }],
         );
     }
 
