@@ -376,11 +376,6 @@ fn dispatch(state: &mut State, id: CommandId) -> Vec<Command> {
                 state.modal = None;
                 return Vec::new();
             }
-            (Modal::QuitConfirm, CommandId::QuitConfirm | CommandId::Quit) => {
-                state.should_quit = true;
-                state.modal = None;
-                return vec![Command::Quit];
-            }
             // Anything else while a modal is open: ignored.
             _ => return Vec::new(),
         }
@@ -401,11 +396,18 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             return vec![Command::Quit];
         }
         CommandId::QuitConfirm => {
+            use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind};
             if state.workers.is_empty() {
                 state.should_quit = true;
                 return vec![Command::Quit];
             }
-            state.modal = Some(Modal::QuitConfirm);
+            state.modal = Some(Modal::Confirm(ConfirmDialog {
+                title: "Quit?".into(),
+                body: "Workers are still running.\nQuit anyway?".into(),
+                buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
+                focused: 1, // safety default — No
+                kind: ConfirmKind::QuitWithWorkers,
+            }));
         }
         CommandId::Cancel => { /* nothing to cancel without a modal */ }
         CommandId::Help => {
@@ -1040,7 +1042,12 @@ mod tests {
             },
         );
         let (s, cmds) = update(s, key(KeyCode::F(10)));
-        assert!(matches!(s.modal, Some(Modal::QuitConfirm)));
+        match s.modal {
+            Some(Modal::Confirm(ref d)) => {
+                assert_eq!(d.kind, crate::state::ConfirmKind::QuitWithWorkers);
+            }
+            _ => panic!("expected Confirm dialog"),
+        }
         assert!(!s.should_quit);
         assert!(cmds.is_empty());
     }
