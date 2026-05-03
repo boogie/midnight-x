@@ -5,3 +5,4 @@
 #![forbid(unsafe_code)]
 
 pub mod input_xlate;
+pub mod theme_styles;
