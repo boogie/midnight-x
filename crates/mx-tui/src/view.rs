@@ -278,9 +278,9 @@ fn render_panel(frame: &mut Frame<'_>, area: Rect, state: &State, side: PanelSid
 fn size_cell(entry: &mx_core::state::DirEntry) -> String {
     use mx_core::state::EntryKind;
     if entry.name == ".." {
-        " < Up >".to_string() // 7 chars
+        "   <Up>".to_string() // 7 chars: 3-space pad + "<Up>"
     } else if entry.kind == EntryKind::Dir {
-        "  <Dir>".to_string() // 7 chars
+        "  <Dir>".to_string() // 7 chars: 2-space pad + "<Dir>"
     } else {
         mx_fs::format::format_size(entry.size)
     }
@@ -289,8 +289,8 @@ fn size_cell(entry: &mx_core::state::DirEntry) -> String {
 fn format_footer(entry: &mx_core::state::DirEntry, width: usize, date_fmt: &str) -> String {
     use mx_core::state::EntryKind;
     let size_str = match entry.kind {
-        EntryKind::Dir if entry.name == ".." => "  <Up>".to_string(),
-        EntryKind::Dir => "  <Dir>".to_string(),
+        EntryKind::Dir if entry.name == ".." => "<Up>".to_string(),
+        EntryKind::Dir => "<Dir>".to_string(),
         _ => mx_fs::format::format_size(entry.size).trim_start().to_string(),
     };
     let mtime_str = if entry.mtime.is_some() {

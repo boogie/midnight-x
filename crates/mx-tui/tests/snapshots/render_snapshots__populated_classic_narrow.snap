@@ -4,7 +4,7 @@ expression: buffer_snapshot(&buf)
 ---
 ╔═════════════════════════ ~/proj ╤═══════╤════════════════╗
 ║               Name              │ Size  │    Modified    ║
-║ ..                              │ < Up >│                ║
+║ ..                              │   <Up>│                ║
 ║ src                             │  <Dir>│                ║
 ║ target                          │  <Dir>│                ║
 ║ Cargo.toml                      │ 1.21 K│                ║
