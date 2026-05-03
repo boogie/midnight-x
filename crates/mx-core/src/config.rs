@@ -65,7 +65,7 @@ pub struct InputConfig {
 impl Default for InputConfig {
     fn default() -> Self {
         Self {
-            chord_timeout_ms: 500,
+            chord_timeout_ms: 1500,
             double_click_ms: 250,
         }
     }
@@ -165,10 +165,10 @@ mod tests {
     }
 
     #[test]
-    fn input_chord_timeout_is_500ms_default() {
+    fn input_chord_timeout_default() {
         assert_eq!(
             InputConfig::default().chord_timeout(),
-            std::time::Duration::from_millis(500),
+            std::time::Duration::from_millis(1500),
         );
     }
 }

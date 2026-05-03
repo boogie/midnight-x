@@ -1056,11 +1056,12 @@ mod tests {
             "esc must wait for chord_timeout before closing"
         );
         // Now flush via a Tick after chord_timeout.
-        let one_sec_ago = Instant::now()
-            .checked_sub(Duration::from_secs(1))
-            .expect("monotonic clock supports 1s subtraction");
+        // Push pending_since well past the chord timeout (now 1500 ms).
+        let long_ago = Instant::now()
+            .checked_sub(Duration::from_secs(3))
+            .expect("monotonic clock supports 3s subtraction");
         let s2 = State {
-            pending_since: Some(one_sec_ago),
+            pending_since: Some(long_ago),
             ..s
         };
         let (s3, _) = update(

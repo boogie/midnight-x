@@ -13,7 +13,7 @@ size               = true
 modified           = true
 
 [input]
-chord_timeout_ms   = 500
+chord_timeout_ms   = 1500
 double_click_ms    = 250
 
 [ops]
