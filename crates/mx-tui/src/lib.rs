@@ -4,6 +4,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod format;
 pub mod input_thread;
 pub mod input_xlate;
 pub mod layout;
