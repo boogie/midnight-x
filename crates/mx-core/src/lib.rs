@@ -2,3 +2,5 @@
 //! shared across crates. No terminal, no I/O, no threads.
 
 #![forbid(unsafe_code)]
+
+pub mod input;
