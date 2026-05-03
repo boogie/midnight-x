@@ -4,12 +4,14 @@
 
 #![forbid(unsafe_code)]
 
+pub mod copy;
 pub mod delete;
 pub mod dir_scan;
 pub mod executor;
 pub mod format;
 pub mod ops;
 
+pub use copy::{copy_file, copy_tree, CopyReport, OverwriteAction};
 pub use delete::{delete_tree, DeleteReport};
 pub use dir_scan::scan;
 pub use format::format_size;
