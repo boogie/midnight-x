@@ -6,5 +6,6 @@
 
 pub mod input_xlate;
 pub mod layout;
+pub mod renderer;
 pub mod theme_styles;
 pub mod view;
