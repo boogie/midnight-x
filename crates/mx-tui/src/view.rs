@@ -434,16 +434,32 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
     // + 2 rows internal padding (1 top, 1 bottom) + 2 rows border.
     // Width    = max(body_line, button_strip, title) + 4 cols padding + 2 border.
     let body_lines: Vec<&str> = body.lines().collect();
-    let body_h: u16 = u16::try_from(body_lines.len()).unwrap_or(u16::MAX);
+    // Op + Input dialogs are rendered as two-row widgets (prompt + field)
+    // and `body_text` returns "" for them; supply the row count explicitly.
+    let body_h: u16 = match modal {
+        Modal::Op(_) | Modal::Input(_) => 2,
+        _ => u16::try_from(body_lines.len()).unwrap_or(u16::MAX),
+    };
     let buttons_h: u16 = u16::from(!buttons.is_empty());
+    let widget_min_w = match modal {
+        Modal::Op(d) => d.prompt.chars().count().max(d.target.chars().count() + 2),
+        Modal::Input(d) => d
+            .prompt
+            .chars()
+            .count()
+            .max(d.title.chars().count())
+            .max(d.value.chars().count() + 2),
+        _ => 0,
+    };
     let body_w = body_lines
         .iter()
         .map(|l| l.chars().count())
         .max()
-        .unwrap_or(0);
+        .unwrap_or(0)
+        .max(widget_min_w);
     let buttons_w = buttons_strip_width(&buttons);
     let title_w = title.chars().count();
-    let inner_w = body_w.max(buttons_w).max(title_w);
+    let inner_w = body_w.max(buttons_w).max(title_w).max(40);
 
     // Outer modal size, capped so that the halo (3 cols × 1 row on every
     // side) always fits inside the screen.
