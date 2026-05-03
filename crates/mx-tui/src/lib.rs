@@ -3,3 +3,5 @@
 //! translation.
 
 #![forbid(unsafe_code)]
+
+pub mod input_xlate;
