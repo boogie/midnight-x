@@ -99,9 +99,20 @@ pub fn run(config: Config) -> Result<()> {
                 Command::CancelWorker(id) => {
                     executor.cancel(id);
                 }
-                Command::StartCopy { .. }
-                | Command::StartMove { .. }
-                | Command::ResolveConflict(_, _) => { /* later Phase 3 tasks */ }
+                Command::StartCopy { src, dst } => {
+                    let id = executor.start_copy(src, dst);
+                    state.workers.insert(
+                        id,
+                        mx_core::state::WorkerState {
+                            id,
+                            kind: mx_core::state::WorkerKind::Copy,
+                        },
+                    );
+                }
+                Command::ResolveConflict(id, policy) => {
+                    executor.resolve_conflict(id, policy);
+                }
+                Command::StartMove { .. } => { /* Task 15 */ }
             }
         }
 

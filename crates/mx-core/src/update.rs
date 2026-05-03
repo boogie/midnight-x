@@ -215,8 +215,22 @@ fn handle_worker_msg(state: &mut State, id: crate::event::WorkerId, msg: crate::
             }));
             state.workers.remove(&id);
         }
-        WorkerMsg::Conflict { .. } => {
-            // Filled in in Task 14 (copy/move conflict round-trip).
+        WorkerMsg::Conflict { src, dst, kind } => {
+            use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind};
+            let body = format!("{src}\nalready exists at\n{dst}\n({kind:?})");
+            state.modal = Some(Modal::Confirm(ConfirmDialog {
+                title: "Overwrite?".into(),
+                body,
+                buttons: vec![
+                    ConfirmButton::Yes,
+                    ConfirmButton::No,
+                    ConfirmButton::YesAll,
+                    ConfirmButton::NoAll,
+                    ConfirmButton::Cancel,
+                ],
+                focused: 1,
+                kind: ConfirmKind::Conflict { worker: id },
+            }));
         }
     }
 }
@@ -562,8 +576,37 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
             }));
         }
 
-        // Phase 3 follow-on tasks.
-        CommandId::Copy | CommandId::Move => {}
+        CommandId::Copy => {
+            use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind, Modal};
+            let panel = state.focused();
+            if panel.entries.is_empty() {
+                return Vec::new();
+            }
+            let src = collect_targets(panel);
+            if src.is_empty() {
+                return Vec::new();
+            }
+            let other = match state.focus {
+                PanelSide::Left => 1,
+                PanelSide::Right => 0,
+            };
+            let dst = state.panels[other].cwd.clone();
+            let body = if src.len() == 1 {
+                format!("Copy {} to {}?", src[0], dst)
+            } else {
+                format!("Copy {} items to {}?", src.len(), dst)
+            };
+            state.modal = Some(Modal::Confirm(ConfirmDialog {
+                title: "Confirm copy".into(),
+                body,
+                buttons: vec![ConfirmButton::Yes, ConfirmButton::No],
+                focused: 0,
+                kind: ConfirmKind::StartCopy { src, dst },
+            }));
+        }
+
+        // Phase 3 follow-on task.
+        CommandId::Move => {}
     }
     Vec::new()
 }
