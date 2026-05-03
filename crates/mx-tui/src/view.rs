@@ -430,8 +430,8 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
             "Workers are still running. Quit anyway?\n\n[ Yes ]   [ No ]".to_string()
         }
         Modal::Error(d) => d.body.clone(),
-        Modal::Confirm(d) => d.body.clone(),
-        Modal::Input(d) => format!("{}\n> {}", d.prompt, d.value),
+        Modal::Confirm(d) => render_confirm_body(d),
+        Modal::Input(d) => render_input_body(d),
         Modal::Progress(d) => {
             format!(
                 "{}\n{} / {} bytes",
@@ -586,4 +586,54 @@ fn command_label(c: mx_core::command::CommandId) -> &'static str {
         CommandId::RescanFocused => "Rescan",
         CommandId::RescanBoth => "Rescan both",
     }
+}
+
+fn render_confirm_body(d: &mx_core::state::ConfirmDialog) -> String {
+    use std::fmt::Write as _;
+    let mut out = String::new();
+    if !d.title.is_empty() {
+        out.push_str(&d.title);
+        out.push('\n');
+        out.push('\n');
+    }
+    out.push_str(&d.body);
+    out.push_str("\n\n");
+    for (i, b) in d.buttons.iter().enumerate() {
+        let label = match b {
+            mx_core::state::ConfirmButton::Yes => "Yes",
+            mx_core::state::ConfirmButton::No => "No",
+            mx_core::state::ConfirmButton::YesAll => "Yes-All",
+            mx_core::state::ConfirmButton::NoAll => "No-All",
+            mx_core::state::ConfirmButton::Cancel => "Cancel",
+            mx_core::state::ConfirmButton::Ok => "OK",
+        };
+        if i > 0 {
+            out.push_str("  ");
+        }
+        if i == d.focused {
+            let _ = write!(out, ">{label}<");
+        } else {
+            let _ = write!(out, " {label} ");
+        }
+    }
+    out
+}
+
+fn render_input_body(d: &mx_core::state::InputDialog) -> String {
+    let mut out = String::new();
+    if !d.title.is_empty() {
+        out.push_str(&d.title);
+        out.push('\n');
+        out.push('\n');
+    }
+    out.push_str(&d.prompt);
+    out.push('\n');
+    let cursor = d.cursor.min(d.value.len());
+    out.push_str("> ");
+    out.push_str(&d.value[..cursor]);
+    out.push('▏');
+    out.push_str(&d.value[cursor..]);
+    out.push_str("\n\n");
+    out.push_str(" Enter = OK   Esc = Cancel ");
+    out
 }
