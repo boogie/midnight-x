@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Please email `magic@barthazi.hu` with details. Do not open a public issue.
+Please email `andras@barthazi.hu` with details. Do not open a public issue.
 
 We will acknowledge receipt within 7 days and aim to ship a fix within 30 days
 for confirmed issues. There is no bug bounty.

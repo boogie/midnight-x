@@ -227,8 +227,8 @@ edition       = "2021"
 rust-version  = "1.85"
 authors       = ["Bártházi András and Midnight X contributors"]
 license       = "MIT OR Apache-2.0"
-repository    = "https://github.com/barthazi/midnight-x"
-homepage      = "https://github.com/barthazi/midnight-x"
+repository    = "https://github.com/boogie/midnight-x"
+homepage      = "https://github.com/boogie/midnight-x"
 readme        = "README.md"
 
 [workspace.lints.rust]
@@ -350,11 +350,11 @@ Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`).
 
 - [ ] **Step 12: Write `CODE_OF_CONDUCT.md`**
 
-Use Contributor Covenant 2.1. Source: `https://www.contributor-covenant.org/version/2/1/code_of_conduct/`. Save the markdown verbatim, replacing the contact placeholder with `magic@barthazi.hu`.
+Use Contributor Covenant 2.1. Source: `https://www.contributor-covenant.org/version/2/1/code_of_conduct/`. Save the markdown verbatim, replacing the contact placeholder with `andras@barthazi.hu`.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/EthicalSource/contributor_covenant/release/content/version/2/1/code_of_conduct.md -o CODE_OF_CONDUCT.md
-sed -i.bak 's/\[INSERT CONTACT METHOD\]/magic@barthazi.hu/g' CODE_OF_CONDUCT.md && rm CODE_OF_CONDUCT.md.bak
+sed -i.bak 's/\[INSERT CONTACT METHOD\]/andras@barthazi.hu/g' CODE_OF_CONDUCT.md && rm CODE_OF_CONDUCT.md.bak
 ```
 
 - [ ] **Step 13: Write `SECURITY.md`**
@@ -364,7 +364,7 @@ sed -i.bak 's/\[INSERT CONTACT METHOD\]/magic@barthazi.hu/g' CODE_OF_CONDUCT.md 
 
 ## Reporting a vulnerability
 
-Please email `magic@barthazi.hu` with details. Do not open a public issue.
+Please email `andras@barthazi.hu` with details. Do not open a public issue.
 
 We will acknowledge receipt within 7 days and aim to ship a fix within 30 days
 for confirmed issues. There is no bug bounty.
