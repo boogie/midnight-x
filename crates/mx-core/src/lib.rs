@@ -11,3 +11,6 @@ pub mod theme;
 pub mod keymap;
 pub mod config;
 pub mod state;
+pub mod update;
+
+pub use update::update;
