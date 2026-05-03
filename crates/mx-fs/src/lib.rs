@@ -7,3 +7,6 @@
 pub mod dir_scan;
 pub mod executor;
 pub mod format;
+
+pub use dir_scan::scan;
+pub use format::format_size;
