@@ -463,6 +463,21 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
         height: modal_h,
     };
 
+    // Halo: 2-col / 1-row buffer of plain panel background around the
+    // modal frame so the dialog doesn't look like it's wedged against the
+    // panel borders / entries.
+    let halo = Rect {
+        x: rect.x.saturating_sub(2),
+        y: rect.y.saturating_sub(1),
+        width: rect.width.saturating_add(4).min(screen.width),
+        height: rect.height.saturating_add(2).min(screen.height),
+    };
+    frame.render_widget(Clear, halo);
+    frame.render_widget(
+        Block::default().style(frame_style(&state.config.theme)),
+        halo,
+    );
+
     frame.render_widget(Clear, rect);
 
     let block = Block::default()

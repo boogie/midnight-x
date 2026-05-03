@@ -10,7 +10,7 @@ expression: buffer_snapshot(&buf)
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
-║                                                ║║                                                ║
+║                                                                                                  ║
 ║                                 ╭─────────── Error ───────────╮                                  ║
 ║                                 │                             │                                  ║
 ║                                 │  3 errors                   │                                  ║
@@ -22,7 +22,7 @@ expression: buffer_snapshot(&buf)
 ║                                 │             OK              │                                  ║
 ║                                 │                             │                                  ║
 ║                                 ╰─────────────────────────────╯                                  ║
-║                                                ║║                                                ║
+║                                                                                                  ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
@@ -882,7 +882,7 @@ expression: buffer_snapshot(&buf)
 (46,8) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (47,8) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (48,8) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
-(49,8) Style { fg: Some(Rgb(255, 255, 85)), bg: Some(Rgb(0, 0, 170)), add_modifier: BOLD, sub_modifier: NONE }
+(49,8) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (50,8) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (51,8) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (52,8) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
@@ -2082,7 +2082,7 @@ expression: buffer_snapshot(&buf)
 (46,20) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (47,20) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (48,20) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
-(49,20) Style { fg: Some(Rgb(255, 255, 85)), bg: Some(Rgb(0, 0, 170)), add_modifier: BOLD, sub_modifier: NONE }
+(49,20) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (50,20) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (51,20) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (52,20) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }

@@ -12,16 +12,16 @@ expression: buffer_snapshot(&buf)
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
-║                                                ║║                                                ║
+║                                                                                                  ║
 ║  ╭──────────────────────────────────────── Working… ─────────────────────────────────────────╮   ║
 ║  │                                                                                           │   ║
-║(e│  /tmp/big.bin                                                                             │   ║
+║  │  /tmp/big.bin                                                                             │   ║
 ║  │  [█████████████████████████████████████──────────────────────────────────────]  50%       │   ║
 ║  │                                                                                           │   ║
 ║  │   Esc / Ctrl-C = Cancel                                                                   │   ║
 ║  │                                                                                           │   ║
 ║  ╰───────────────────────────────────────────────────────────────────────────────────────────╯   ║
-║                                                ║║                                                ║
+║                                                                                                  ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
 ║                                                ║║                                                ║
@@ -1082,7 +1082,7 @@ expression: buffer_snapshot(&buf)
 (46,10) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (47,10) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (48,10) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
-(49,10) Style { fg: Some(Rgb(255, 255, 85)), bg: Some(Rgb(0, 0, 170)), add_modifier: BOLD, sub_modifier: NONE }
+(49,10) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (50,10) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (51,10) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (52,10) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
@@ -1982,7 +1982,7 @@ expression: buffer_snapshot(&buf)
 (46,19) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (47,19) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (48,19) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
-(49,19) Style { fg: Some(Rgb(255, 255, 85)), bg: Some(Rgb(0, 0, 170)), add_modifier: BOLD, sub_modifier: NONE }
+(49,19) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (50,19) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (51,19) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
 (52,19) Style { fg: Some(Rgb(204, 204, 204)), bg: Some(Rgb(0, 0, 170)), add_modifier: NONE, sub_modifier: NONE }
