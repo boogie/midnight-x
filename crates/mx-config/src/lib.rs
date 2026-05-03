@@ -4,3 +4,5 @@
 //! [`mx-core`]: ../mx_core/index.html
 
 #![forbid(unsafe_code)]
+
+pub mod keymap_str;
