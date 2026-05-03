@@ -444,10 +444,10 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
     let title_w = title.chars().count();
     let inner_w = body_w.max(buttons_w).max(title_w);
 
-    // Outer modal size, capped at "screen minus 4 cells" so there's at least
-    // 2 cells of clear space around the frame on every side.
-    let max_w = screen.width.saturating_sub(4);
-    let max_h = screen.height.saturating_sub(4);
+    // Outer modal size, capped so that the halo (3 cols × 4 rows on every
+    // side) always fits inside the screen.
+    let max_w = screen.width.saturating_sub(6);
+    let max_h = screen.height.saturating_sub(8);
     let modal_w = (u16::try_from(inner_w).unwrap_or(u16::MAX).saturating_add(6)).min(max_w);
     let modal_h = body_h
         .saturating_add(buttons_h)
@@ -463,20 +463,22 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
         height: modal_h,
     };
 
-    // Halo: 2-col / 1-row buffer of plain panel background around the
-    // modal frame so the dialog doesn't look like it's wedged against the
-    // panel borders / entries.
+    // Halo: 3-col horizontal / 4-row vertical buffer of *chrome* colour
+    // around the modal frame so the dialog floats on its own background
+    // rather than blue-on-blue against the panel content. Red delete gets
+    // a red halo; other dialogs get the white halo.
+    let halo_x = rect.x.saturating_sub(3);
+    let halo_y = rect.y.saturating_sub(4);
+    let halo_right = (rect.x + rect.width).saturating_add(3).min(screen.width);
+    let halo_bottom = (rect.y + rect.height).saturating_add(4).min(screen.height);
     let halo = Rect {
-        x: rect.x.saturating_sub(2),
-        y: rect.y.saturating_sub(1),
-        width: rect.width.saturating_add(4).min(screen.width),
-        height: rect.height.saturating_add(2).min(screen.height),
+        x: halo_x,
+        y: halo_y,
+        width: halo_right.saturating_sub(halo_x),
+        height: halo_bottom.saturating_sub(halo_y),
     };
     frame.render_widget(Clear, halo);
-    frame.render_widget(
-        Block::default().style(frame_style(&state.config.theme)),
-        halo,
-    );
+    frame.render_widget(Block::default().style(chrome), halo);
 
     frame.render_widget(Clear, rect);
 
