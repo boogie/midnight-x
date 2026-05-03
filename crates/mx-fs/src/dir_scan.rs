@@ -140,6 +140,13 @@ fn mtime_key(t: Option<SystemTime>) -> u128 {
         .map_or(0, |d| d.as_nanos())
 }
 
+/// Public re-export so sibling modules (`ops`, `copy`, `delete`) can map
+/// `io::Error` consistently.
+#[must_use]
+pub fn map_io_pub(e: &std::io::Error) -> FsError {
+    map_io(e)
+}
+
 fn map_io(e: &std::io::Error) -> FsError {
     use std::io::ErrorKind as K;
     match e.kind() {

@@ -7,6 +7,8 @@
 pub mod dir_scan;
 pub mod executor;
 pub mod format;
+pub mod ops;
 
 pub use dir_scan::scan;
 pub use format::format_size;
+pub use ops::{mkdir, rename};
