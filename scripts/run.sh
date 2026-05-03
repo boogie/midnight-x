@@ -19,4 +19,9 @@ if ! command -v cargo >/dev/null 2>&1; then
     exit 127
 fi
 
-exec cargo run -p mx --release -- "$@"
+# Build first so compile diagnostics are obvious; then exec the binary
+# directly so its exit code (and signals like Ctrl-C) are what the caller
+# sees, not cargo's wrapper.
+cargo build -p mx --release
+
+exec target/release/mx "$@"
