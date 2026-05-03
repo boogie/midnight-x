@@ -2,13 +2,14 @@
 //! Phase 2 ships only directory scanning; Phase 3 adds copy/move/delete.
 
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};
 
 use camino::Utf8PathBuf;
 
+use mx_core::command::OverwritePolicy;
 use mx_core::event::{Event, WorkerId, WorkerMsg};
 use mx_core::state::{PanelSide, SortMode};
 
@@ -17,7 +18,17 @@ use crate::dir_scan::scan;
 pub struct Executor {
     tx: Sender<Event>,
     next_id: AtomicU64,
-    handles: HashMap<WorkerId, JoinHandle<()>>,
+    workers: HashMap<WorkerId, WorkerHandle>,
+}
+
+struct WorkerHandle {
+    join: JoinHandle<()>,
+    cancel: Arc<AtomicBool>,
+    /// Sender used to deliver an `OverwritePolicy` resolution to a worker
+    /// paused on a `Conflict`. `None` for ops that never raise conflicts.
+    /// Populated for copy / move workers in later Phase 3 tasks.
+    #[allow(dead_code)]
+    resume: Option<Sender<OverwritePolicy>>,
 }
 
 impl Executor {
@@ -26,7 +37,7 @@ impl Executor {
         Self {
             tx,
             next_id: AtomicU64::new(1),
-            handles: HashMap::new(),
+            workers: HashMap::new(),
         }
     }
 
@@ -49,7 +60,8 @@ impl Executor {
     ) -> WorkerId {
         let id = self.alloc_id();
         let tx = self.tx.clone();
-        let handle = thread::Builder::new()
+        let cancel = Arc::new(AtomicBool::new(false));
+        let join = thread::Builder::new()
             .name(format!("mx-fs-scan-{}", id.0))
             .spawn(move || {
                 let msg = match scan(&dir, show_hidden, sort) {
@@ -61,27 +73,89 @@ impl Executor {
                 let _ = tx.send(Event::Worker(id, msg));
             })
             .expect("worker thread cannot fail to spawn");
-        self.handles.insert(id, handle);
+        self.workers.insert(
+            id,
+            WorkerHandle {
+                join,
+                cancel,
+                resume: None,
+            },
+        );
         id
+    }
+
+    /// Spawn a recursive delete worker.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the OS refuses to spawn a thread.
+    pub fn start_delete(&mut self, paths: Vec<Utf8PathBuf>) -> WorkerId {
+        let id = self.alloc_id();
+        let tx = self.tx.clone();
+        let cancel = Arc::new(AtomicBool::new(false));
+        let cancel_for_thread = Arc::clone(&cancel);
+        let join = thread::Builder::new()
+            .name(format!("mx-fs-del-{}", id.0))
+            .spawn(move || {
+                let mut errors = Vec::new();
+                for p in &paths {
+                    if cancel_for_thread.load(Ordering::Relaxed) {
+                        break;
+                    }
+                    let _ = tx.send(Event::Worker(
+                        id,
+                        WorkerMsg::Progress {
+                            bytes_done: 0,
+                            bytes_total: 0,
+                            current_path: p.clone(),
+                        },
+                    ));
+                    let report = crate::delete::delete_tree(p, &cancel_for_thread);
+                    errors.extend(report.errors);
+                }
+                let msg = if errors.is_empty() {
+                    WorkerMsg::Done
+                } else {
+                    WorkerMsg::Failed { errors }
+                };
+                let _ = tx.send(Event::Worker(id, msg));
+            })
+            .expect("worker thread cannot fail to spawn");
+        self.workers.insert(
+            id,
+            WorkerHandle {
+                join,
+                cancel,
+                resume: None,
+            },
+        );
+        id
+    }
+
+    /// Cancel a running worker.
+    pub fn cancel(&self, id: WorkerId) {
+        if let Some(w) = self.workers.get(&id) {
+            w.cancel.store(true, Ordering::Relaxed);
+        }
     }
 
     /// Drop completed workers from the handle map. Called periodically by
     /// the main loop so the map doesn't grow unbounded.
     pub fn reap(&mut self) {
-        self.handles.retain(|_, h| !h.is_finished());
+        self.workers.retain(|_, w| !w.join.is_finished());
     }
 
     /// Wait for all in-flight workers to finish. Used during shutdown.
     pub fn join_all(&mut self) {
-        let handles: Vec<_> = self.handles.drain().collect();
-        for (_, h) in handles {
-            let _ = h.join();
+        let workers = std::mem::take(&mut self.workers);
+        for (_, w) in workers {
+            let _ = w.join.join();
         }
     }
 
     #[must_use]
     pub fn active_count(&self) -> usize {
-        self.handles.len()
+        self.workers.len()
     }
 }
 
@@ -168,6 +242,22 @@ mod tests {
             assert_eq!(errors[0].1, mx_core::errors::FsError::NotFound);
         }
         ex.join_all();
+    }
+
+    #[test]
+    fn start_delete_removes_paths_and_emits_done() {
+        let t = tempfile::tempdir().unwrap();
+        std::fs::write(t.path().join("a"), b"x").unwrap();
+        std::fs::write(t.path().join("b"), b"y").unwrap();
+        let (tx, rx) = mpsc::channel::<Event>();
+        let mut ex = Executor::new(tx);
+        let p_a = camino::Utf8PathBuf::from_path_buf(t.path().join("a")).unwrap();
+        let p_b = camino::Utf8PathBuf::from_path_buf(t.path().join("b")).unwrap();
+        let _id = ex.start_delete(vec![p_a, p_b]);
+        let _ = drain(&rx, |e| matches!(e, Event::Worker(_, WorkerMsg::Done)));
+        ex.join_all();
+        assert!(!t.path().join("a").exists());
+        assert!(!t.path().join("b").exists());
     }
 
     #[test]
