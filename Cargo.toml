@@ -4,6 +4,8 @@ members  = [
     "crates/mx-core",
     "crates/mx-config",
     "crates/mx-tui",
+    "crates/mx-fs",
+    "crates/mx-preview",
     "crates/mx",
 ]
 
@@ -27,6 +29,7 @@ must_use_candidate      = "allow"
 
 [workspace.dependencies]
 camino             = { version = "1.1", features = ["serde1"] }
+chrono             = { version = "0.4", default-features = false, features = ["clock", "std"] }
 crossterm          = "0.28"
 directories        = "5"
 pico-args          = "0.5"
@@ -48,6 +51,8 @@ assert_cmd         = "2"
 mx-core            = { path = "crates/mx-core" }
 mx-config          = { path = "crates/mx-config" }
 mx-tui             = { path = "crates/mx-tui" }
+mx-fs              = { path = "crates/mx-fs" }
+mx-preview         = { path = "crates/mx-preview" }
 
 [profile.release]
 lto           = "thin"

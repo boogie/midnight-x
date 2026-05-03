@@ -1,0 +1,21 @@
+[package]
+name        = "mx-preview"
+version     = "0.0.1"
+description = "Midnight X — content preview trait + plain-text impl (mxview seam)"
+edition.workspace      = true
+rust-version.workspace = true
+authors.workspace      = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mx-core   = { workspace = true }
+camino    = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
