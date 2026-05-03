@@ -39,7 +39,9 @@ pub fn update(mut state: State, event: Event) -> (State, Vec<Command>) {
                 }
             }
         }
-        Event::Worker(_, _) => { /* Phase 2 */ }
+        Event::Worker(id, msg) => {
+            handle_worker_msg(&mut state, id, msg);
+        }
         Event::Resize { .. } => { /* renderer reads new size next frame */ }
     }
 
@@ -100,6 +102,34 @@ fn handle_chord(state: &mut State, chord: KeyChord, cmds: &mut Vec<Command>) {
                 }
             }
         }
+    }
+}
+
+fn handle_worker_msg(
+    state: &mut State,
+    _id: crate::event::WorkerId,
+    msg: crate::event::WorkerMsg,
+) {
+    use crate::event::WorkerMsg;
+    match msg {
+        WorkerMsg::DirScanned { side, entries } => {
+            let panel = &mut state.panels[side.index()];
+            let new_entries: std::sync::Arc<[_]> = entries.into();
+            panel.entries = new_entries;
+            panel.loading = false;
+            let last = panel.entries.len().saturating_sub(1);
+            if panel.cursor > last {
+                panel.cursor = last;
+            }
+            if panel.scroll > last {
+                panel.scroll = last;
+            }
+        }
+        // Phase 3 surfaces these in modals.
+        WorkerMsg::Progress { .. }
+        | WorkerMsg::Conflict { .. }
+        | WorkerMsg::Done
+        | WorkerMsg::Failed { .. } => {}
     }
 }
 
@@ -307,6 +337,27 @@ mod tests {
     fn unknown_key_does_not_panic() {
         let s = st();
         let (_, cmds) = update(s, key(KeyCode::F(11)));
+        assert!(cmds.is_empty());
+    }
+
+    #[test]
+    fn dir_scanned_replaces_panel_entries_and_clamps_cursor() {
+        use crate::event::{WorkerId, WorkerMsg};
+        let mut s = st();
+        s.panels[0].cursor = 999;
+        let entries = vec![
+            crate::state::DirEntry::parent(),
+            crate::state::DirEntry::file("a.txt", 10),
+            crate::state::DirEntry::file("b.txt", 20),
+        ];
+        let ev = Event::Worker(
+            WorkerId(1),
+            WorkerMsg::DirScanned { side: PanelSide::Left, entries },
+        );
+        let (s, cmds) = update(s, ev);
+        assert_eq!(s.panels[0].entries.len(), 3);
+        assert_eq!(s.panels[0].cursor, 2);
+        assert!(!s.panels[0].loading);
         assert!(cmds.is_empty());
     }
 }
