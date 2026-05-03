@@ -183,6 +183,33 @@ pub enum Modal {
     Help,
     QuitConfirm,
     Viewer(ViewerDialog),
+    /// Far-style copy/move "options" dialog: editable destination path
+    /// plus button row. More than `Confirm` (multi-widget); narrower in
+    /// scope than `Input` (has buttons).
+    Op(OpDialog),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OpDialog {
+    pub title:    String,
+    pub prompt:   String,        // "Copy 160529.i to:"
+    pub target:   String,        // editable destination path
+    pub cursor:   usize,
+    pub focus:    OpFocus,
+    pub buttons:  Vec<ConfirmButton>,
+    pub kind:     OpKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OpFocus {
+    Path,
+    Button(usize),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum OpKind {
+    Copy { src: Vec<Utf8PathBuf> },
+    Move { src: Vec<Utf8PathBuf> },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -425,6 +425,14 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
             mx_core::state::ConfirmKind::Conflict { .. }  => " Overwrite? ",
             mx_core::state::ConfirmKind::QuitWithWorkers  => " Quit? ",
         },
+        Modal::Op(d) => {
+            // Borrow as &str then leak into a static slot via match-by-reference;
+            // since the title is short and bounded, return a `&'static str`.
+            match d.kind {
+                mx_core::state::OpKind::Copy { .. } => " Copy ",
+                mx_core::state::OpKind::Move { .. } => " Move ",
+            }
+        }
         Modal::Input(_) => " Input ",
         Modal::Progress(_) => " Working… ",
         Modal::Error(_) => " Error ",
@@ -440,6 +448,7 @@ fn render_modal(frame: &mut Frame<'_>, area: Rect, state: &State) {
         Modal::Input(d) => render_input_body(d),
         Modal::Progress(d) => render_progress_body(d, area),
         Modal::Viewer(d) => render_viewer_body(d, area),
+        Modal::Op(d) => render_op_body(d),
     };
     let p = Paragraph::new(body)
         .block(
@@ -664,6 +673,50 @@ fn render_error_body(d: &mx_core::state::ErrorDialog) -> String {
         }
     }
     out.push_str("\n[ OK ]");
+    out
+}
+
+fn render_op_body(d: &mx_core::state::OpDialog) -> String {
+    use std::fmt::Write as _;
+    use mx_core::state::{ConfirmButton, OpFocus};
+    let mut out = String::new();
+    out.push_str(&d.prompt);
+    out.push('\n');
+    // Path field: show inline `▏` cursor when focused; when unfocused
+    // wrap with `[` and `]` to indicate it's an editable field.
+    let cursor = d.cursor.min(d.target.len());
+    if matches!(d.focus, OpFocus::Path) {
+        out.push_str("> ");
+        out.push_str(&d.target[..cursor]);
+        out.push('▏');
+        out.push_str(&d.target[cursor..]);
+    } else {
+        out.push_str("  ");
+        out.push_str(&d.target);
+    }
+    out.push_str("\n\n");
+    for (i, b) in d.buttons.iter().enumerate() {
+        let label = match b {
+            ConfirmButton::Copy   => "Copy",
+            ConfirmButton::Move   => "Move",
+            ConfirmButton::Cancel => "Cancel",
+            ConfirmButton::Yes    => "Yes",
+            ConfirmButton::No     => "No",
+            ConfirmButton::YesAll => "Yes-All",
+            ConfirmButton::NoAll  => "No-All",
+            ConfirmButton::Ok     => "OK",
+            ConfirmButton::Delete => "Delete",
+        };
+        if i > 0 {
+            out.push_str("  ");
+        }
+        let is_focused = matches!(d.focus, OpFocus::Button(b_idx) if b_idx == i);
+        if is_focused {
+            let _ = write!(out, ">{label}<");
+        } else {
+            let _ = write!(out, " {label} ");
+        }
+    }
     out
 }
 

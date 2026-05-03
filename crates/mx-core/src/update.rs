@@ -92,6 +92,12 @@ fn handle_chord(state: &mut State, chord: KeyChord, cmds: &mut Vec<Command>) {
             return;
         }
     }
+    // Same for the path field of an OpDialog.
+    if let Some(Modal::Op(d)) = state.modal.as_mut() {
+        if op_modal_consume_key(d, chord) {
+            return;
+        }
+    }
 
     state.pending_chord.push(chord);
     let lookup = state.config.keymap.lookup(&state.pending_chord);
@@ -256,6 +262,7 @@ fn flush_pending_chord(state: &mut State, cmds: &mut Vec<Command>) {
     // Lookup::Prefix or NoMatch on flush: drop silently.
 }
 
+#[allow(clippy::too_many_lines)] // single dispatch chokepoint; splitting hurts readability
 fn dispatch(state: &mut State, id: CommandId) -> Vec<Command> {
     // Input modal: anything not consumed by typing (Esc, Tab, Enter) lands
     // here. Esc/Cancel closes; Enter (=EnterDir) submits.
@@ -300,6 +307,34 @@ fn dispatch(state: &mut State, id: CommandId) -> Vec<Command> {
                 return Vec::new();
             }
             _ => {}
+        }
+    }
+
+    // OpDialog: Tab cycles focus across path field + buttons. Enter on
+    // the path field advances to first button; Enter on a button submits.
+    if let Some(Modal::Op(_)) = state.modal.as_ref() {
+        match id {
+            CommandId::FocusOther => {
+                if let Some(Modal::Op(d)) = state.modal.as_mut() {
+                    let n_buttons = d.buttons.len();
+                    d.focus = match d.focus {
+                        crate::state::OpFocus::Path => crate::state::OpFocus::Button(0),
+                        crate::state::OpFocus::Button(i) if i + 1 < n_buttons => {
+                            crate::state::OpFocus::Button(i + 1)
+                        }
+                        crate::state::OpFocus::Button(_) => crate::state::OpFocus::Path,
+                    };
+                }
+                return Vec::new();
+            }
+            CommandId::Cancel => {
+                state.modal = None;
+                return Vec::new();
+            }
+            CommandId::EnterDir => {
+                return resolve_op(state);
+            }
+            _ => return Vec::new(),
         }
     }
 
@@ -587,61 +622,15 @@ fn handle_command_no_modal(state: &mut State, id: CommandId) -> Vec<Command> {
         }
 
         CommandId::Copy => {
-            use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind, Modal};
-            let panel = state.focused();
-            if panel.entries.is_empty() {
-                return Vec::new();
+            if let Some(d) = build_op_dialog(state, OpVerb::Copy) {
+                state.modal = Some(crate::state::Modal::Op(d));
             }
-            let src = collect_targets(panel);
-            if src.is_empty() {
-                return Vec::new();
-            }
-            let other = match state.focus {
-                PanelSide::Left => 1,
-                PanelSide::Right => 0,
-            };
-            let dst = state.panels[other].cwd.clone();
-            let body = if src.len() == 1 {
-                format!("Copy {} to {}?", src[0], dst)
-            } else {
-                format!("Copy {} items to {}?", src.len(), dst)
-            };
-            state.modal = Some(Modal::Confirm(ConfirmDialog {
-                title: "Copy".into(),
-                body,
-                buttons: vec![ConfirmButton::Copy, ConfirmButton::Cancel],
-                focused: 0,
-                kind: ConfirmKind::StartCopy { src, dst },
-            }));
         }
 
         CommandId::Move => {
-            use crate::state::{ConfirmButton, ConfirmDialog, ConfirmKind, Modal};
-            let panel = state.focused();
-            if panel.entries.is_empty() {
-                return Vec::new();
+            if let Some(d) = build_op_dialog(state, OpVerb::Move) {
+                state.modal = Some(crate::state::Modal::Op(d));
             }
-            let src = collect_targets(panel);
-            if src.is_empty() {
-                return Vec::new();
-            }
-            let other = match state.focus {
-                PanelSide::Left => 1,
-                PanelSide::Right => 0,
-            };
-            let dst = state.panels[other].cwd.clone();
-            let body = if src.len() == 1 {
-                format!("Move {} to {}?", src[0], dst)
-            } else {
-                format!("Move {} items to {}?", src.len(), dst)
-            };
-            state.modal = Some(Modal::Confirm(ConfirmDialog {
-                title: "Move".into(),
-                body,
-                buttons: vec![ConfirmButton::Move, ConfirmButton::Cancel],
-                focused: 0,
-                kind: ConfirmKind::StartMove { src, dst },
-            }));
         }
     }
     Vec::new()
@@ -696,6 +685,173 @@ fn schedule_post_op_rescan(
     for side in worker.affected_sides {
         state.panels[side.index()].loading = true;
         cmds.push(Command::RescanDir(side));
+    }
+}
+
+#[derive(Clone, Copy)]
+enum OpVerb {
+    Copy,
+    Move,
+}
+
+fn build_op_dialog(state: &State, verb: OpVerb) -> Option<crate::state::OpDialog> {
+    use crate::state::{ConfirmButton, OpDialog, OpFocus, OpKind};
+    let panel = state.focused();
+    if panel.entries.is_empty() {
+        return None;
+    }
+    let src = collect_targets(panel);
+    if src.is_empty() {
+        return None;
+    }
+    let other = state.focus.other();
+    let mut target = state.panels[other.index()].cwd.to_string();
+    // For a single source, append its name so the user sees the full target.
+    if src.len() == 1 {
+        if let Some(name) = src[0].file_name() {
+            if !target.ends_with('/') {
+                target.push('/');
+            }
+            target.push_str(name);
+        }
+    }
+    let cursor = target.len();
+    let (title, prompt, action_button, kind) = match verb {
+        OpVerb::Copy => {
+            let prompt = if src.len() == 1 {
+                format!(
+                    "Copy {} to:",
+                    src[0].file_name().unwrap_or(src[0].as_str())
+                )
+            } else {
+                format!("Copy {} items to:", src.len())
+            };
+            (
+                "Copy".to_string(),
+                prompt,
+                ConfirmButton::Copy,
+                OpKind::Copy { src },
+            )
+        }
+        OpVerb::Move => {
+            let prompt = if src.len() == 1 {
+                format!(
+                    "Move {} to:",
+                    src[0].file_name().unwrap_or(src[0].as_str())
+                )
+            } else {
+                format!("Move {} items to:", src.len())
+            };
+            (
+                "Move".to_string(),
+                prompt,
+                ConfirmButton::Move,
+                OpKind::Move { src },
+            )
+        }
+    };
+    Some(OpDialog {
+        title,
+        prompt,
+        target,
+        cursor,
+        focus: OpFocus::Path,
+        buttons: vec![action_button, ConfirmButton::Cancel],
+        kind,
+    })
+}
+
+/// Consume a key when an `OpDialog` is open and focus is on the path field.
+/// Returns `true` when the key was handled (and should not bubble to the
+/// keymap).
+fn op_modal_consume_key(d: &mut crate::state::OpDialog, c: KeyChord) -> bool {
+    use crate::input::KeyCode;
+    use crate::state::OpFocus;
+    if !matches!(d.focus, OpFocus::Path) {
+        return false;
+    }
+    if c.mods.ctrl || c.mods.alt {
+        return false;
+    }
+    match c.code {
+        KeyCode::Char(ch) => {
+            d.target.insert(d.cursor, ch);
+            d.cursor += ch.len_utf8();
+            true
+        }
+        KeyCode::Backspace => {
+            if d.cursor > 0 {
+                let new_cursor = floor_char_boundary(&d.target, d.cursor - 1);
+                d.target.replace_range(new_cursor..d.cursor, "");
+                d.cursor = new_cursor;
+            }
+            true
+        }
+        KeyCode::Delete => {
+            if d.cursor < d.target.len() {
+                let next = ceil_char_boundary(&d.target, d.cursor + 1);
+                d.target.replace_range(d.cursor..next, "");
+            }
+            true
+        }
+        KeyCode::Left => {
+            if d.cursor > 0 {
+                d.cursor = floor_char_boundary(&d.target, d.cursor - 1);
+            }
+            true
+        }
+        KeyCode::Right => {
+            if d.cursor < d.target.len() {
+                d.cursor = ceil_char_boundary(&d.target, d.cursor + 1);
+            }
+            true
+        }
+        KeyCode::Home => {
+            d.cursor = 0;
+            true
+        }
+        KeyCode::End => {
+            d.cursor = d.target.len();
+            true
+        }
+        _ => false,
+    }
+}
+
+fn resolve_op(state: &mut State) -> Vec<Command> {
+    use crate::state::{ConfirmButton, Modal, OpFocus, OpKind};
+    let Some(Modal::Op(d)) = state.modal.take() else {
+        return Vec::new();
+    };
+    // Path-focus + Enter: just advance to first button.
+    if matches!(d.focus, OpFocus::Path) {
+        let mut d = d;
+        d.focus = OpFocus::Button(0);
+        state.modal = Some(Modal::Op(d));
+        return Vec::new();
+    }
+    let OpFocus::Button(idx) = d.focus else {
+        return Vec::new();
+    };
+    let button = d.buttons.get(idx).copied();
+    // Non-action buttons (Cancel) close the modal without emitting a Command.
+    if !matches!(
+        button,
+        Some(ConfirmButton::Copy | ConfirmButton::Move | ConfirmButton::Yes)
+    ) {
+        return Vec::new();
+    }
+    let dst = camino::Utf8PathBuf::from(d.target.trim());
+    if dst.as_str().is_empty() {
+        // Empty target: re-open the modal with focus back on the path.
+        let mut d = d;
+        d.focus = OpFocus::Path;
+        state.modal = Some(Modal::Op(d));
+        return Vec::new();
+    }
+    match (d.kind, button) {
+        (OpKind::Copy { src }, _) => vec![Command::StartCopy { src, dst }],
+        (OpKind::Move { src }, _) => vec![Command::StartMove { src, dst }],
     }
 }
 
