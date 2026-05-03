@@ -1,0 +1,33 @@
+# Midnight X — default configuration. Every section is optional in user
+# config files; missing fields fall back to these values.
+
+[ui]
+theme              = "classic"
+show_hidden        = false
+panel_ratio        = 50
+truncate_path      = "middle"
+date_format        = "%Y-%m-%d %H:%M"
+
+[ui.columns]
+size               = true
+modified           = true
+
+[input]
+chord_timeout_ms   = 500
+double_click_ms    = 250
+
+[ops]
+copy_buffer_kib    = 1024
+preserve_mtime     = true
+preserve_mode      = true
+follow_symlinks    = false
+max_concurrent_workers = 2
+
+[logging]
+level              = "warn"
+file               = "auto"
+
+# [keymap] is omitted: the built-in defaults from mx-core::Keymap::defaults()
+# are the canonical source. Users may add overrides like:
+#   "ctrl-q"  = "quit_confirm"
+#   "f5"      = "<unbind>"
