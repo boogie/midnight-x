@@ -441,12 +441,9 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
         _ => u16::try_from(body_lines.len()).unwrap_or(u16::MAX),
     };
     let buttons_h: u16 = u16::from(!buttons.is_empty());
-    // Modals with an input field get a horizontal separator between the
-    // field and the button row so the editable area is visually closed off.
-    let separator_h: u16 = match modal {
-        Modal::Op(_) | Modal::Input(_) if buttons_h == 1 => 1,
-        _ => 0,
-    };
+    // Every dialog with a button row gets a horizontal separator above
+    // the buttons — keeps the look consistent across Confirm/Op/Input.
+    let separator_h: u16 = buttons_h;
     let widget_min_w = match modal {
         Modal::Op(d) => d.prompt.chars().count().max(d.target.chars().count() + 2),
         Modal::Input(d) => d
@@ -542,29 +539,30 @@ fn render_modal(frame: &mut Frame<'_>, _layout_hint: Rect, state: &State) {
         }
     }
 
-    // Internal separator (only when the modal has a typed field above buttons).
+    // Internal separator above the button row — single horizontal line
+    // spanning the full interior, with ╟ / ╢ t-junctions where the
+    // single-line divider meets the double-line side borders.
     if separator_h == 1 {
         let sep_y = inner.y + actual_body_h;
-        let sep_text: String = "═".repeat(inner.width as usize);
+        let interior_w = rect.width.saturating_sub(2);
+        let sep_text: String = "─".repeat(interior_w as usize);
         frame.render_widget(
             Paragraph::new(sep_text).style(chrome),
             Rect {
-                x: inner.x,
+                x: rect.x + 1,
                 y: sep_y,
-                width: inner.width,
+                width: interior_w,
                 height: 1,
             },
         );
-        // Replace the side-border cells the padding leaves alone so the
-        // separator visually fuses into the double-line frame.
         let left_x = rect.x;
         let right_x = rect.x + rect.width - 1;
         if let Some(cell) = frame.buffer_mut().cell_mut((left_x, sep_y)) {
-            cell.set_symbol("╠");
+            cell.set_symbol("╟");
             cell.set_style(chrome);
         }
         if let Some(cell) = frame.buffer_mut().cell_mut((right_x, sep_y)) {
-            cell.set_symbol("╣");
+            cell.set_symbol("╢");
             cell.set_style(chrome);
         }
     }
